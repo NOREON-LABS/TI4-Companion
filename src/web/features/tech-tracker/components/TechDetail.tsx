@@ -1,4 +1,4 @@
-import { Check, ListPlus, Pin } from 'lucide-react';
+import { Check, Pin } from 'lucide-react';
 import type { Tech } from '@domain';
 import { Badge } from '@web/components/ui/badge';
 import { Button } from '@web/components/ui/button';
@@ -11,10 +11,8 @@ interface TechDetailProps {
   tech: Tech;
   status: TechStatus;
   isPinned: boolean;
-  isQueued: boolean;
   onToggleOwned: () => void;
   onTogglePin: () => void;
-  onToggleQueue: () => void;
 }
 
 /** Card-text reader + quick actions, shown in a popover when a tech is tapped. */
@@ -22,10 +20,8 @@ export function TechDetail({
   tech,
   status,
   isPinned,
-  isQueued,
   onToggleOwned,
   onTogglePin,
-  onToggleQueue,
 }: TechDetailProps) {
   return (
     <div className="flex flex-col gap-3 p-3">
@@ -54,10 +50,6 @@ export function TechDetail({
         <Button variant={isPinned ? 'default' : 'outline'} onClick={onTogglePin}>
           <Pin className="h-4 w-4" />
           {isPinned ? 'Pinned' : 'Pin'}
-        </Button>
-        <Button variant={isQueued ? 'default' : 'outline'} onClick={onToggleQueue}>
-          <ListPlus className="h-4 w-4" />
-          {isQueued ? 'Queued' : 'Queue'}
         </Button>
       </div>
     </div>

@@ -2,24 +2,53 @@ import { TECH_COLORS, type PrereqCounts } from '@domain';
 import { cn } from '@web/lib/utils';
 import { COLOR_DOT, COLOR_LABEL } from '../colors';
 
+const CHANNEL_ACCENT = {
+  blue: {
+    bar: 'bg-tech-blue',
+    glow: 'shadow-[0_0_12px_hsl(var(--tech-blue)/0.7)]',
+  },
+  green: {
+    bar: 'bg-tech-green',
+    glow: 'shadow-[0_0_12px_hsl(var(--tech-green)/0.7)]',
+  },
+  yellow: {
+    bar: 'bg-tech-yellow',
+    glow: 'shadow-[0_0_12px_hsl(var(--tech-yellow)/0.7)]',
+  },
+  red: {
+    bar: 'bg-tech-red',
+    glow: 'shadow-[0_0_12px_hsl(var(--tech-red)/0.7)]',
+  },
+} as const;
+
 /** Shows how many prerequisites of each colour the player currently has available. */
 export function AvailabilityBar({ available }: { available: PrereqCounts }) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border/80 bg-border/80 shadow-[0_12px_35px_-24px_hsl(var(--primary)/0.45)] sm:grid-cols-4">
       {TECH_COLORS.map((color) => (
         <div
           key={color}
           className={cn(
-            'flex items-center gap-2 rounded-lg border bg-card/60 px-3 py-2 transition-opacity',
-            available[color] === 0 && 'opacity-50',
+            'group relative flex min-w-0 items-center gap-2 bg-card/75 px-3 py-2.5 transition-colors hover:bg-card',
+            available[color] === 0 && 'text-muted-foreground',
           )}
           title={`${COLOR_LABEL[color]} prerequisites available`}
         >
+          <span className={cn('absolute inset-x-0 bottom-0 h-0.5', CHANNEL_ACCENT[color].bar)} />
           <span
-            className={cn('h-3.5 w-3.5 rounded-full ring-1 ring-inset ring-black/30', COLOR_DOT[color])}
+            className={cn(
+              'h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-inset ring-white/15',
+              COLOR_DOT[color],
+              CHANNEL_ACCENT[color].glow,
+              available[color] === 0 && 'opacity-35 shadow-none',
+            )}
           />
-          <span className="text-xs text-muted-foreground">{COLOR_LABEL[color]}</span>
-          <span className="text-base font-bold leading-none tabular-nums">{available[color]}</span>
+          <span className="min-w-0 flex-1 truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            {COLOR_LABEL[color]}
+          </span>
+          <span className="font-display text-lg font-bold leading-none tabular-nums text-foreground">
+            {available[color]}
+          </span>
         </div>
       ))}
     </div>

@@ -1,6 +1,6 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Globe, ListOrdered, Pin } from 'lucide-react';
+import { Globe, Pin } from 'lucide-react';
 import {
   activeEntities,
   availablePrerequisites,
@@ -19,7 +19,6 @@ import { FactionSelector } from './components/FactionSelector';
 import { FilterBar, type TechFilters } from './components/FilterBar';
 import { PinnedTray } from './components/PinnedTray';
 import { PlanetControl } from './components/PlanetControl';
-import { ResearchQueue, type QueueItem } from './components/ResearchQueue';
 import { StartingTechChoice } from './components/StartingTechChoice';
 import { TechItem } from './components/TechItem';
 import { CATEGORY_ACCENT, CATEGORY_LABEL, CATEGORY_ORDER } from './colors';
@@ -30,7 +29,6 @@ import {
   useSetFaction,
   useUpdatePins,
   useUpdatePlanets,
-  useUpdateQueue,
   useUpdateTechs,
 } from './hooks/useGameState';
 
@@ -41,20 +39,38 @@ function toggleInSet(set: ReadonlySet<string>, id: string): string[] {
   return [...next];
 }
 
+const STATUS_SORT_ORDER: Record<TechStatus, number> = {
+  available: 0,
+  locked: 1,
+  owned: 2,
+};
+
 export function TechTrackerPage() {
   const { data: game, isLoading, isError } = useGame();
   const updateTechs = useUpdateTechs();
   const updatePlanets = useUpdatePlanets();
   const setFaction = useSetFaction();
   const updatePins = useUpdatePins();
-  const updateQueue = useUpdateQueue();
   const qc = useQueryClient();
+  const [focusedTechId, setFocusedTechId] = useState<string | null>(null);
 
   const [filters, setFilters] = useState<TechFilters>(() => ({
     statuses: new Set<TechStatus>(['available', 'owned', 'locked']),
     categories: new Set<TechCategory>(CATEGORY_ORDER),
     hideOtherFactionTechs: false,
   }));
+
+  useEffect(() => {
+    if (!focusedTechId) return;
+    const frame = requestAnimationFrame(() => {
+      const item = document.getElementById(`tech-${focusedTechId}`);
+      if (!item) return;
+      item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      item.focus({ preventScroll: true });
+      setFocusedTechId(null);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [focusedTechId]);
 
   const view = useMemo(() => {
     if (!game) return null;
@@ -90,7 +106,6 @@ export function TechTrackerPage() {
 
   const { techById } = view;
   const pinnedIds = new Set(game.pinnedTechIds);
-  const queuedIds = new Set(game.queuedTechIds);
   const currentFaction = game.factionId
     ? (FACTIONS.find((f) => f.id === game.factionId) ?? null)
     : null;
@@ -111,42 +126,58 @@ export function TechTrackerPage() {
     updatePlanets.mutate(toggleInSet(new Set(liveGame().controlledPlanetIds), id));
   const togglePin = (id: string) =>
     updatePins.mutate(toggleInSet(new Set(liveGame().pinnedTechIds), id));
-  const toggleQueue = (id: string) => {
-    const queued = liveGame().queuedTechIds;
-    updateQueue.mutate(queued.includes(id) ? queued.filter((x) => x !== id) : [...queued, id]);
-  };
-  const removeFromQueue = (id: string) =>
-    updateQueue.mutate(liveGame().queuedTechIds.filter((x) => x !== id));
 
   const resolve = (ids: readonly string[]): Tech[] =>
     ids.map((id) => techById.get(id)).filter((t): t is Tech => Boolean(t));
   const pinnedTechs = resolve(game.pinnedTechIds);
-  const queueItems: QueueItem[] = resolve(game.queuedTechIds).map((tech) => ({
-    tech,
-    status: statusOf(tech),
-  }));
+
+  const navigateToTech = (tech: Tech) => {
+    setFilters((current) => {
+      const statuses = new Set(current.statuses);
+      const categories = new Set(current.categories);
+      statuses.add(statusOf(tech));
+      categories.add(tech.category);
+      return {
+        statuses,
+        categories,
+        hideOtherFactionTechs: tech.factionId ? false : current.hideOtherFactionTechs,
+      };
+    });
+    setFocusedTechId(tech.id);
+  };
 
   // Apply the filter bar to the catalog (status / type / hide other factions' techs).
   const visibleByCategory = new Map<TechCategory, Tech[]>();
   for (const category of CATEGORY_ORDER) {
     if (!filters.categories.has(category)) continue;
-    const techs = (view.byCategory.get(category) ?? []).filter((t) => {
-      if (!filters.statuses.has(statusOf(t))) return false;
-      if (filters.hideOtherFactionTechs && t.factionId && t.factionId !== game.factionId) return false;
-      return true;
-    });
+    const techs = (view.byCategory.get(category) ?? [])
+      .filter((t) => {
+        if (!filters.statuses.has(statusOf(t))) return false;
+        if (filters.hideOtherFactionTechs && t.factionId && t.factionId !== game.factionId)
+          return false;
+        return true;
+      })
+      .sort((a, b) => {
+        const statusDifference = STATUS_SORT_ORDER[statusOf(a)] - STATUS_SORT_ORDER[statusOf(b)];
+        return statusDifference || a.name.localeCompare(b.name);
+      });
     if (techs.length > 0) visibleByCategory.set(category, techs);
   }
   const anyVisible = visibleByCategory.size > 0;
 
   return (
     <>
-      {/* Available prerequisites + faction picker share a row. */}
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Available prerequisites
-          </h2>
+      {/* Research spectrum + faction picker share the command strip. */}
+      <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0 flex-1">
+          <div className="mb-2 flex items-baseline gap-2">
+            <h2 className="font-display text-xs font-semibold uppercase tracking-[0.16em] text-foreground">
+              Research spectrum
+            </h2>
+            <span className="hidden text-[11px] text-muted-foreground sm:inline">
+              Owned tech + planet specialties
+            </span>
+          </div>
           <AvailabilityBar available={view.available} />
         </div>
         <FactionSelector
@@ -165,32 +196,11 @@ export function TechTrackerPage() {
         />
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
-        {/* Single-column + roomy through tablet (iPad is the primary device); the right rail
-            and multi-column tech grid only kick in on a true desktop (xl, >=1280px). */}
-        <aside className="grid gap-4 sm:grid-cols-2 sm:items-start xl:sticky xl:top-6 xl:col-start-2 xl:row-start-1 xl:flex xl:flex-col xl:self-start">
-          <Card>
-            <CardHeader className="p-4 pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <ListOrdered className="h-4 w-4 text-primary" />
-                Research queue
-                {queueItems.length > 0 ? (
-                  <span className="ml-auto text-xs font-normal tabular-nums text-muted-foreground">
-                    {queueItems.length}
-                  </span>
-                ) : null}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <ResearchQueue
-                items={queueItems}
-                onReorder={(ids) => updateQueue.mutate(ids)}
-                onRemove={removeFromQueue}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_340px] xl:gap-6">
+        {/* At iPad landscape and above, setup tools form a compact sticky inspector rail so
+            the research catalog remains visible in the first viewport. */}
+        <aside className="grid gap-4 sm:grid-cols-2 sm:items-start lg:sticky lg:top-5 lg:col-start-2 lg:row-start-1 lg:flex lg:flex-col lg:self-start">
+          <Card className="min-w-0 w-full">
             <CardHeader className="p-4 pb-2">
               <CardTitle className="flex items-center gap-2 text-sm">
                 <Pin className="h-4 w-4 text-primary" />
@@ -203,11 +213,11 @@ export function TechTrackerPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
-              <PinnedTray techs={pinnedTechs} onUnpin={togglePin} />
+              <PinnedTray techs={pinnedTechs} onNavigate={navigateToTech} onUnpin={togglePin} />
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="min-w-0 w-full">
             <CardHeader className="p-4 pb-2">
               <CardTitle className="flex items-center gap-2 text-sm">
                 <Globe className="h-4 w-4 text-primary" />
@@ -230,18 +240,21 @@ export function TechTrackerPage() {
         </aside>
 
         {/* Tech catalog */}
-        <main className="flex flex-col gap-4 xl:col-start-1 xl:row-start-1">
+        <main className="flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-1">
           <FilterBar filters={filters} onChange={setFilters} />
 
           {anyVisible ? (
-            // Single column on phone + iPad portrait (roomy rows); two columns from iPad
-            // landscape up, where there's width for ~490px columns.
-            <div className="grid gap-4 lg:grid-cols-2">
+            // Keep one roomy research column throughout iPad sizes; split tracks only when
+            // a true desktop viewport leaves enough width for complete names and statuses.
+            <div className="grid gap-4 xl:grid-cols-2">
               {CATEGORY_ORDER.map((category) => {
                 const techs = visibleByCategory.get(category);
                 if (!techs) return null;
                 return (
-                  <Card key={category}>
+                  <Card
+                    key={category}
+                    className="border-border/70 bg-card/45 shadow-[0_18px_44px_-38px_black]"
+                  >
                     <CardHeader className="p-4 pb-2">
                       <CardTitle className="flex items-center gap-2 text-sm">
                         <span
@@ -260,10 +273,8 @@ export function TechTrackerPage() {
                           tech={tech}
                           status={statusOf(tech)}
                           isPinned={pinnedIds.has(tech.id)}
-                          isQueued={queuedIds.has(tech.id)}
                           onToggleOwned={() => toggleOwned(tech.id)}
                           onTogglePin={() => togglePin(tech.id)}
-                          onToggleQueue={() => toggleQueue(tech.id)}
                         />
                       ))}
                     </CardContent>

@@ -13,34 +13,26 @@ interface TechItemProps {
   tech: Tech;
   status: TechStatus;
   isPinned: boolean;
-  isQueued: boolean;
   onToggleOwned: () => void;
   onTogglePin: () => void;
-  onToggleQueue: () => void;
 }
 
 /**
  * A tech row: the checkbox toggles ownership; tapping the name opens the detail popover
  * (card text + pin/queue actions). A pin glyph shows when the tech is pinned.
  */
-export function TechItem({
-  tech,
-  status,
-  isPinned,
-  isQueued,
-  onToggleOwned,
-  onTogglePin,
-  onToggleQueue,
-}: TechItemProps) {
+export function TechItem({ tech, status, isPinned, onToggleOwned, onTogglePin }: TechItemProps) {
   const badge = STATUS_BADGE[status];
   const accent = CATEGORY_ACCENT[tech.category];
   return (
     <div
+      id={`tech-${tech.id}`}
+      tabIndex={-1}
       className={cn(
         // Hierarchy is carried by opacity (locked recedes) + the gold "Available" badge,
         // so the row itself stays calm — gold is reserved for the one actionable signal.
         // Roomy, touch-friendly rows (iPad is the primary device).
-        'flex min-h-[3.25rem] items-center gap-3 rounded-lg border border-l-[3px] bg-card/40 px-3 py-2.5 transition-all hover:bg-card/70',
+        'flex min-h-[3.25rem] scroll-mt-6 items-center gap-3 rounded-lg border border-l-[3px] bg-card/35 px-3 py-2.5 outline-none transition-[background-color,opacity,transform,box-shadow] duration-200 motion-safe:hover:-translate-y-px hover:bg-card/75 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background',
         accent.border,
         status === 'owned' && 'bg-emerald-500/[0.06]',
         status === 'locked' && 'opacity-50 hover:opacity-100',
@@ -54,7 +46,10 @@ export function TechItem({
       />
       <Popover>
         <PopoverTrigger asChild>
-          <button type="button" className="flex min-w-0 flex-1 flex-col items-start gap-0.5 py-1 text-left">
+          <button
+            type="button"
+            className="flex min-w-0 flex-1 flex-col items-start gap-0.5 rounded-sm py-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+          >
             <span className="flex items-center gap-2 text-base font-medium leading-tight">
               {tech.name}
               {tech.factionId ? (
@@ -70,10 +65,8 @@ export function TechItem({
             tech={tech}
             status={status}
             isPinned={isPinned}
-            isQueued={isQueued}
             onToggleOwned={onToggleOwned}
             onTogglePin={onTogglePin}
-            onToggleQueue={onToggleQueue}
           />
         </PopoverContent>
       </Popover>
