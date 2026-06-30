@@ -41,7 +41,7 @@ function Chip({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors',
+        'inline-flex min-h-[2rem] items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors',
         accent
           ? active
             ? 'border-primary bg-primary text-primary-foreground'

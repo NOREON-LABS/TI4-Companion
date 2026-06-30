@@ -165,9 +165,10 @@ export function TechTrackerPage() {
         />
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
-        {/* Your game state — on top for tablet (the table device), right rail on desktop. */}
-        <aside className="grid gap-4 sm:grid-cols-2 sm:items-start lg:sticky lg:top-6 lg:col-start-2 lg:row-start-1 lg:flex lg:flex-col lg:self-start">
+      <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
+        {/* Single-column + roomy through tablet (iPad is the primary device); the right rail
+            and multi-column tech grid only kick in on a true desktop (xl, >=1280px). */}
+        <aside className="grid gap-4 sm:grid-cols-2 sm:items-start xl:sticky xl:top-6 xl:col-start-2 xl:row-start-1 xl:flex xl:flex-col xl:self-start">
           <Card>
             <CardHeader className="p-4 pb-2">
               <CardTitle className="flex items-center gap-2 text-sm">
@@ -229,11 +230,13 @@ export function TechTrackerPage() {
         </aside>
 
         {/* Tech catalog */}
-        <main className="flex flex-col gap-4 lg:col-start-1 lg:row-start-1">
+        <main className="flex flex-col gap-4 xl:col-start-1 xl:row-start-1">
           <FilterBar filters={filters} onChange={setFilters} />
 
           {anyVisible ? (
-            <div className="grid gap-4 sm:grid-cols-2">
+            // Single column on phone + iPad portrait (roomy rows); two columns from iPad
+            // landscape up, where there's width for ~490px columns.
+            <div className="grid gap-4 lg:grid-cols-2">
               {CATEGORY_ORDER.map((category) => {
                 const techs = visibleByCategory.get(category);
                 if (!techs) return null;

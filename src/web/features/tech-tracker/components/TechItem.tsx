@@ -39,7 +39,8 @@ export function TechItem({
       className={cn(
         // Hierarchy is carried by opacity (locked recedes) + the gold "Available" badge,
         // so the row itself stays calm — gold is reserved for the one actionable signal.
-        'flex items-center gap-2 rounded-md border border-l-[3px] bg-card/40 px-2.5 py-2 transition-all hover:bg-card/70',
+        // Roomy, touch-friendly rows (iPad is the primary device).
+        'flex min-h-[3.25rem] items-center gap-3 rounded-lg border border-l-[3px] bg-card/40 px-3 py-2.5 transition-all hover:bg-card/70',
         accent.border,
         status === 'owned' && 'bg-emerald-500/[0.06]',
         status === 'locked' && 'opacity-50 hover:opacity-100',
@@ -49,16 +50,17 @@ export function TechItem({
         checked={status === 'owned'}
         onCheckedChange={onToggleOwned}
         aria-label={`Mark ${tech.name} owned`}
+        className="h-6 w-6 shrink-0"
       />
       <Popover>
         <PopoverTrigger asChild>
-          <button type="button" className="flex min-w-0 flex-1 flex-col items-start text-left">
-            <span className="flex items-center gap-2 text-sm font-medium leading-tight">
+          <button type="button" className="flex min-w-0 flex-1 flex-col items-start gap-0.5 py-1 text-left">
+            <span className="flex items-center gap-2 text-base font-medium leading-tight">
               {tech.name}
               {tech.factionId ? (
                 <span className="text-xs uppercase text-muted-foreground">{tech.factionId}</span>
               ) : null}
-              {isPinned ? <Pin className="h-3 w-3 fill-current text-primary" /> : null}
+              {isPinned ? <Pin className="h-3.5 w-3.5 fill-current text-primary" /> : null}
             </span>
             <PrereqPips prerequisites={tech.prerequisites} />
           </button>

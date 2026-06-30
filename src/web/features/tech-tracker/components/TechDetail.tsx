@@ -47,19 +47,15 @@ export function TechDetail({
       <p className="whitespace-pre-line text-sm leading-snug">{tech.text}</p>
 
       <div className="flex flex-wrap gap-2">
-        <Button
-          size="sm"
-          variant={status === 'owned' ? 'default' : 'outline'}
-          onClick={onToggleOwned}
-        >
+        <Button variant={status === 'owned' ? 'default' : 'outline'} onClick={onToggleOwned}>
           <Check className="h-4 w-4" />
           {status === 'owned' ? 'Owned' : 'Mark owned'}
         </Button>
-        <Button size="sm" variant={isPinned ? 'default' : 'outline'} onClick={onTogglePin}>
+        <Button variant={isPinned ? 'default' : 'outline'} onClick={onTogglePin}>
           <Pin className="h-4 w-4" />
           {isPinned ? 'Pinned' : 'Pin'}
         </Button>
-        <Button size="sm" variant={isQueued ? 'default' : 'outline'} onClick={onToggleQueue}>
+        <Button variant={isQueued ? 'default' : 'outline'} onClick={onToggleQueue}>
           <ListPlus className="h-4 w-4" />
           {isQueued ? 'Queued' : 'Queue'}
         </Button>
