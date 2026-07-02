@@ -5,9 +5,11 @@ import { AppShell } from '@web/components/AppShell';
 import { ComingSoon } from '@web/components/ComingSoon';
 import { queryClient } from '@web/lib/queryClient';
 import { TechTrackerPage } from '@web/features/tech-tracker/TechTrackerPage';
+import { ThemeProvider } from '@web/providers/ThemeProvider';
 
 export function App() {
   return (
+    <ThemeProvider>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
@@ -22,5 +24,6 @@ export function App() {
       </BrowserRouter>
       <Toaster theme="dark" position="top-center" richColors closeButton />
     </QueryClientProvider>
+    </ThemeProvider>
   );
 }

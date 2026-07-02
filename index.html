@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TI4 Companion</title>
+    <!-- Restore persisted theme before React renders to prevent a flash of default styles. -->
+    <script>(function(){var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);})();</script>
   </head>
   <body>
     <div id="root"></div>

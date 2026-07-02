@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { TABS } from '@web/app/tabs';
 import { cn } from '@web/lib/utils';
+import { ThemeSwitcher } from '@web/components/ThemeSwitcher';
 
 /**
  * Browser-style tool tabs. A baseline runs under the strip; the active tab "punches through"
@@ -36,6 +37,9 @@ export function TabNav() {
           )}
         </NavLink>
       ))}
+      <div className="ml-auto pb-1">
+        <ThemeSwitcher />
+      </div>
     </nav>
   );
 }
