@@ -13,15 +13,14 @@ import {
 } from '@domain';
 import { Card, CardContent, CardHeader, CardTitle } from '@web/components/ui/card';
 import type { GameState } from '@web/lib/api';
-import { cn } from '@web/lib/utils';
 import { AvailabilityBar } from './components/AvailabilityBar';
 import { FactionSelector } from './components/FactionSelector';
 import { FilterBar, type TechFilters } from './components/FilterBar';
 import { PinnedTray } from './components/PinnedTray';
 import { PlanetControl } from './components/PlanetControl';
 import { StartingTechChoice } from './components/StartingTechChoice';
-import { TechItem } from './components/TechItem';
-import { CATEGORY_ACCENT, CATEGORY_LABEL, CATEGORY_ORDER } from './colors';
+import { TechTreeGrid } from './components/TechTreeGrid';
+import { CATEGORY_ORDER } from './colors';
 import type { TechStatus } from './status';
 import {
   GAME_KEY,
@@ -38,12 +37,6 @@ function toggleInSet(set: ReadonlySet<string>, id: string): string[] {
   else next.add(id);
   return [...next];
 }
-
-const STATUS_SORT_ORDER: Record<TechStatus, number> = {
-  available: 0,
-  locked: 1,
-  owned: 2,
-};
 
 export function TechTrackerPage() {
   const { data: game, isLoading, isError } = useGame();
@@ -146,10 +139,10 @@ export function TechTrackerPage() {
     setFocusedTechId(tech.id);
   };
 
-  // Apply the filter bar to the catalog (status / type / hide other factions' techs).
-  const visibleByCategory = new Map<TechCategory, Tech[]>();
+  // Apply status / hide-other-factions filters to the catalog. Category selection does not
+  // remove techs here — TechTreeGrid dims deselected lanes instead, so the grid keeps its shape.
+  const filteredByCategory = new Map<TechCategory, Tech[]>();
   for (const category of CATEGORY_ORDER) {
-    if (!filters.categories.has(category)) continue;
     const techs = (view.byCategory.get(category) ?? [])
       .filter((t) => {
         if (!filters.statuses.has(statusOf(t))) return false;
@@ -157,13 +150,10 @@ export function TechTrackerPage() {
           return false;
         return true;
       })
-      .sort((a, b) => {
-        const statusDifference = STATUS_SORT_ORDER[statusOf(a)] - STATUS_SORT_ORDER[statusOf(b)];
-        return statusDifference || a.name.localeCompare(b.name);
-      });
-    if (techs.length > 0) visibleByCategory.set(category, techs);
+      .sort((a, b) => a.name.localeCompare(b.name));
+    if (techs.length > 0) filteredByCategory.set(category, techs);
   }
-  const anyVisible = visibleByCategory.size > 0;
+  const anyVisible = filteredByCategory.size > 0;
 
   return (
     <>
@@ -244,43 +234,16 @@ export function TechTrackerPage() {
           <FilterBar filters={filters} onChange={setFilters} />
 
           {anyVisible ? (
-            // Keep one roomy research column throughout iPad sizes; split tracks only when
-            // a true desktop viewport leaves enough width for complete names and statuses.
-            <div className="grid gap-4 xl:grid-cols-2">
-              {CATEGORY_ORDER.map((category) => {
-                const techs = visibleByCategory.get(category);
-                if (!techs) return null;
-                return (
-                  <Card
-                    key={category}
-                    className="border-border/70 bg-card/45 shadow-[0_18px_44px_-38px_black]"
-                  >
-                    <CardHeader className="p-4 pb-2">
-                      <CardTitle className="flex items-center gap-2 text-sm">
-                        <span
-                          className={cn('h-2.5 w-2.5 rounded-full', CATEGORY_ACCENT[category].dot)}
-                        />
-                        {CATEGORY_LABEL[category]}
-                        <span className="ml-auto text-xs font-normal tabular-nums text-muted-foreground">
-                          {techs.length}
-                        </span>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-col gap-2 p-4 pt-0">
-                      {techs.map((tech) => (
-                        <TechItem
-                          key={tech.id}
-                          tech={tech}
-                          status={statusOf(tech)}
-                          isPinned={pinnedIds.has(tech.id)}
-                          onToggleOwned={() => toggleOwned(tech.id)}
-                          onTogglePin={() => togglePin(tech.id)}
-                        />
-                      ))}
-                    </CardContent>
-                  </Card>
-                );
-              })}
+            <div className="rounded-lg border border-border/70 bg-card/45 p-4 shadow-[0_18px_44px_-38px_black]">
+              <TechTreeGrid
+                byCategory={filteredByCategory}
+                activeCategories={filters.categories}
+                statusOf={statusOf}
+                pinnedIds={pinnedIds}
+                available={view.available}
+                onToggleOwned={toggleOwned}
+                onTogglePin={togglePin}
+              />
             </div>
           ) : (
             <p className="rounded-lg border bg-card/40 p-6 text-center text-sm text-muted-foreground">
