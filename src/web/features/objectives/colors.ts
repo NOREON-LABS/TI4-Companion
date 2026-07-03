@@ -15,6 +15,18 @@ export const PLAYER_COLOR_CLASSES: Record<
   pink: { dot: 'bg-pink-400', text: 'text-pink-300', ring: 'ring-pink-400' },
 };
 
+/** Plain hex per plastic colour, for canvas effects (confetti in the winner's colour). */
+export const PLAYER_COLOR_HEX: Record<PlayerColor, string> = {
+  red: '#ef4444',
+  blue: '#0ea5e9',
+  green: '#10b981',
+  yellow: '#facc15',
+  purple: '#a855f7',
+  black: '#a1a1aa',
+  orange: '#f97316',
+  pink: '#f472b6',
+};
+
 /** Narrow a persisted colour string to a known PlayerColor (defensive default: red). */
 export function playerColorOf(color: string): PlayerColor {
   return color in PLAYER_COLOR_CLASSES ? (color as PlayerColor) : 'red';
