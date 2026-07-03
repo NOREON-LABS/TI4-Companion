@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Globe, Pin } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Globe, Pin } from 'lucide-react';
 import {
   activeEntities,
   availablePrerequisites,
@@ -13,6 +13,7 @@ import {
 } from '@domain';
 import { Card, CardContent, CardHeader, CardTitle } from '@web/components/ui/card';
 import type { GameState } from '@web/lib/api';
+import { cn } from '@web/lib/utils';
 import { AvailabilityBar } from './components/AvailabilityBar';
 import { FactionSelector } from './components/FactionSelector';
 import { FilterBar, type TechFilters } from './components/FilterBar';
@@ -46,6 +47,10 @@ export function TechTrackerPage() {
   const updatePins = useUpdatePins();
   const qc = useQueryClient();
   const [focusedTechId, setFocusedTechId] = useState<string | null>(null);
+  // On lg+ the setup panels are an overlay drawer that slides in over the full-width board
+  // (rather than reflowing it); closed by default so the board owns the viewport on load.
+  // Below lg the panels stack above the board in normal flow and this flag is inert.
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const [filters, setFilters] = useState<TechFilters>(() => ({
     statuses: new Set<TechStatus>(['available', 'owned', 'locked']),
@@ -160,14 +165,9 @@ export function TechTrackerPage() {
       {/* Research spectrum + faction picker share the command strip. */}
       <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0 flex-1">
-          <div className="mb-2 flex items-baseline gap-2">
-            <h2 className="font-display text-xs font-semibold uppercase tracking-[0.16em] text-foreground">
-              Research spectrum
-            </h2>
-            <span className="hidden text-[11px] text-muted-foreground sm:inline">
-              Owned tech + planet specialties
-            </span>
-          </div>
+          <h2 className="mb-2 font-display text-xs font-semibold uppercase tracking-[0.16em] text-foreground">
+            Research spectrum
+          </h2>
           <AvailabilityBar available={view.available} />
         </div>
         <FactionSelector
@@ -186,10 +186,17 @@ export function TechTrackerPage() {
         />
       ) : null}
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_340px] xl:gap-6">
-        {/* At iPad landscape and above, setup tools form a compact sticky inspector rail so
-            the research catalog remains visible in the first viewport. */}
-        <aside className="grid gap-4 sm:grid-cols-2 sm:items-start lg:sticky lg:top-5 lg:col-start-2 lg:row-start-1 lg:flex lg:flex-col lg:self-start">
+      <div className="grid gap-5">
+        {/* Below lg the setup tools stack above the board in normal flow. At lg+ they detach
+            into a fixed overlay drawer on the right edge that slides in over the (full-width)
+            board without reflowing it. */}
+        <aside
+          className={cn(
+            'grid gap-4 sm:grid-cols-2 sm:items-start',
+            'lg:fixed lg:right-0 lg:top-[72px] lg:bottom-4 lg:z-40 lg:flex lg:w-[340px] lg:grid-cols-1 lg:flex-col lg:gap-4 lg:overflow-y-auto lg:rounded-l-xl lg:border lg:border-r-0 lg:border-border/70 lg:bg-background/95 lg:p-4 lg:shadow-2xl lg:backdrop-blur lg:transition-transform lg:duration-300',
+            drawerOpen ? 'lg:translate-x-0' : 'lg:translate-x-[360px]',
+          )}
+        >
           <Card className="min-w-0 w-full">
             <CardHeader className="p-4 pb-2">
               <CardTitle className="flex items-center gap-2 text-sm">
@@ -229,8 +236,29 @@ export function TechTrackerPage() {
           </Card>
         </aside>
 
-        {/* Tech catalog */}
-        <main className="flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-1">
+        {/* Drawer handle: a fixed tab vertically centred on the right edge (lg+ only). It rides
+            the drawer's left edge — chevron points into the screen to open, toward the edge to
+            close. transition-[right] keeps it glued to the panel as it slides. */}
+        <button
+          type="button"
+          onClick={() => setDrawerOpen((v) => !v)}
+          aria-expanded={drawerOpen}
+          aria-label={drawerOpen ? 'Hide panels' : 'Show panels'}
+          title={drawerOpen ? 'Hide panels' : 'Show panels'}
+          className={cn(
+            'fixed top-1/2 z-50 hidden -translate-y-1/2 items-center rounded-l-md border border-r-0 border-border/70 bg-card/95 px-1 py-4 text-muted-foreground shadow-lg backdrop-blur transition-[right] duration-300 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:flex',
+            drawerOpen ? 'right-[340px]' : 'right-0',
+          )}
+        >
+          {drawerOpen ? (
+            <ChevronRight className="h-5 w-5" />
+          ) : (
+            <ChevronLeft className="h-5 w-5" />
+          )}
+        </button>
+
+        {/* Tech catalog — always full width; the drawer overlaps it rather than reflowing it. */}
+        <main className="flex min-w-0 flex-col gap-4">
           <FilterBar filters={filters} onChange={setFilters} />
 
           {anyVisible ? (

@@ -1,6 +1,6 @@
 import type { Prerequisites, Tech, TechCategory } from '@domain';
 import { cn } from '@web/lib/utils';
-import { CATEGORY_ACCENT, CATEGORY_ORDER, LANE_META, TIER_LABELS, tierOf } from '../colors';
+import { CATEGORY_ACCENT, CATEGORY_ORDER, TIER_LABELS, tierOf } from '../colors';
 import type { TechStatus } from '../status';
 import { TechCard } from './TechCard';
 
@@ -31,18 +31,19 @@ export function TechTreeGrid({
   const lanes = CATEGORY_ORDER.filter((category) => (byCategory.get(category)?.length ?? 0) > 0);
 
   return (
-    <div className="overflow-x-auto">
+    // 16px gutters + 166px columns keep the full 5-tier grid (8+16 + 5*166 + 4*16 = 918px)
+    // inside an iPad landscape viewport (even minus a desktop scrollbar), so there's no few-px
+    // scroll slack wiggling under swipes. Narrower screens still get real horizontal scroll;
+    // overscroll-x-contain stops a pan from escalating into the browser's back gesture.
+    <div className="overflow-x-auto overscroll-x-contain">
       <div className="min-w-max">
-        {/* Tier axis header row — spacer matches the sticky lane-label width below. */}
-        <div className="mb-3 flex items-end gap-[26px]">
-          <div className="sticky left-0 z-10 w-[126px] shrink-0" />
+        {/* Tier axis header row — spacer matches the sticky lane-marker width below. */}
+        <div className="mb-3 flex items-end gap-4">
+          <div className="sticky left-0 z-10 w-2 shrink-0" />
           {TIER_LABELS.map((tier) => (
-            <div key={tier.top} className="flex w-[170px] shrink-0 flex-col items-center gap-0.5">
+            <div key={tier.top} className="flex w-[166px] shrink-0 flex-col items-center gap-0.5">
               <div className="font-display text-[11px] uppercase tracking-[0.12em] text-foreground/80">
                 {tier.top}
-              </div>
-              <div className="text-[9.5px] uppercase tracking-wide text-muted-foreground">
-                {tier.sub}
               </div>
               <div className="mt-0.5 h-px w-full bg-gradient-to-r from-transparent via-border to-transparent" />
             </div>
@@ -51,7 +52,6 @@ export function TechTreeGrid({
 
         {lanes.map((category) => {
           const techs = byCategory.get(category) ?? [];
-          const meta = LANE_META[category];
           const accent = CATEGORY_ACCENT[category];
           const active = activeCategories.has(category);
           const columns = Array.from({ length: TIER_COUNT }, (_, tier) =>
@@ -66,22 +66,16 @@ export function TechTreeGrid({
                 active ? 'opacity-100' : 'pointer-events-none opacity-[0.15]',
               )}
             >
-              {/* w-[152px] = 126px of content + the 26px gap before the columns, all as one sticky,
-                  self-stretching, opaque block — otherwise cards scrolling underneath peek through
-                  the gap, or below the label's own (shorter) height. */}
-              <div className="sticky left-0 z-10 flex w-[152px] shrink-0 gap-2.5 self-stretch bg-card pr-[26px]">
-                <span className={cn('min-h-10 w-[3px] shrink-0 rounded-full', accent.dot)} />
-                <div className="flex flex-col gap-0.5 pt-0.5">
-                  <div className="font-display text-[11px] uppercase tracking-[0.06em] text-foreground">
-                    {meta.name}
-                  </div>
-                  <div className="text-[9.5px] leading-tight text-muted-foreground">{meta.sub}</div>
-                </div>
+              {/* Sticky, self-stretching, opaque lane marker: an accent line only (label text
+                  removed). w-6 = 8px marker column + the 16px gap before the columns, kept
+                  opaque so cards scrolling underneath don't peek through the gap. */}
+              <div className="sticky left-0 z-10 flex w-6 shrink-0 self-stretch bg-card pr-4">
+                <span className={cn('w-[3px] shrink-0 rounded-full', accent.dot)} />
               </div>
 
-              <div className="flex gap-[26px]">
+              <div className="flex gap-4">
                 {columns.map((col, tier) => (
-                  <div key={tier} className="flex w-[170px] shrink-0 flex-col gap-3">
+                  <div key={tier} className="flex w-[166px] shrink-0 flex-col gap-3">
                     {col.map((tech) => (
                       <TechCard
                         key={tech.id}
