@@ -10,6 +10,8 @@ is © Fantasy Flight Games.
 |---|---|---|---|
 | `async-technologies-pok.json` | [AsyncTI4/TI4_map_generator_bot](https://github.com/AsyncTI4/TI4_map_generator_bot) `src/main/resources/data/technologies/pok.json` | `13801afdc754dfcf2eb5a0b7ecfeb21682d0c277` | technologies (colour, prerequisites, faction, Ω errata) |
 | `async-factions-base.json` / `async-factions-pok.json` | same repo, `data/factions/{base,pok}.json` | `13801afdc754dfcf2eb5a0b7ecfeb21682d0c277` | factions + starting techs |
+| `async-public-objectives.json` | same repo, `data/public_objectives/public_objectives.json` | `13801afdc754dfcf2eb5a0b7ecfeb21682d0c277` | public objectives (stage I/II from points) |
+| `async-secret-objectives.json` | same repo, `data/secret_objectives/secret_objectives.json` | `13801afdc754dfcf2eb5a0b7ecfeb21682d0c277` | secret objectives |
 | `ultimate-PlanetsData.cs` | [Lazik10/TwilightImperiumUltimate](https://github.com/Lazik10/TwilightImperiumUltimate) | `99b8d35918d5b41bf28db3de5449af7e2b2894f5` | planet stats + tech-skips |
 | `ultimate-PlanetName.cs` / `ultimate-PlanetTrait.cs` | same repo | `99b8d35918d5b41bf28db3de5449af7e2b2894f5` | planet enums (reference) |
 

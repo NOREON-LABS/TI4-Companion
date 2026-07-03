@@ -4,6 +4,7 @@
 // Sources (see scripts/sources/SOURCES.md for provenance + pinned commits):
 //   - Techs + factions: AsyncTI4/TI4_map_generator_bot (exact prerequisites, faction
 //     associations, starting techs, Codex Ω chain).
+//   - Objectives: AsyncTI4/TI4_map_generator_bot (public stage I/II + secrets).
 //   - Planets: Lazik10/TwilightImperiumUltimate (planet stats incl. tech-skips).
 // Scope filter: Base + Prophecy of Kings + Codex 1 (Ordinian) only.
 
@@ -185,6 +186,53 @@ function buildPlanets() {
   return planets;
 }
 
+function buildObjectives() {
+  // Objectives are Base/PoK only (no codex revisions); the source files also carry
+  // homebrew ("other", "pbd100", ...) which the source filter drops.
+  const OBJECTIVE_SOURCES = new Set(['base', 'pok']);
+  const KNOWN_PHASES = new Set(['status', 'action', 'agenda']);
+  // Upstream phase strings are inconsistent ("Status" / "Status Phase" / "ACTION").
+  const normalizePhase = (p) =>
+    String(p ?? '')
+      .toLowerCase()
+      .replace(/\s*phase\s*$/, '')
+      .trim();
+
+  const read = (file, kind) =>
+    readJson(file)
+      .filter((o) => OBJECTIVE_SOURCES.has(o.source) && !isJunk(o.name))
+      .map((o) => {
+        const objective = { id: o.alias, name: o.name, kind };
+        // Publics: stage I = 1 VP, stage II = 2 VP — stage is derivable from points.
+        if (kind === 'public') objective.stage = o.points === 2 ? 2 : 1;
+        objective.points = o.points;
+        objective.phase = normalizePhase(o.phase);
+        objective.text = (o.text ?? '').trim();
+        if (o.notes) objective.notes = String(o.notes).trim();
+        objective.source = o.source;
+        return objective;
+      });
+
+  const objectives = [
+    ...read('async-public-objectives.json', 'public'),
+    ...read('async-secret-objectives.json', 'secret'),
+  ];
+
+  const seen = new Set();
+  for (const o of objectives) {
+    if (seen.has(o.id)) warnings.push(`objective: duplicate id "${o.id}"`);
+    seen.add(o.id);
+    if (!KNOWN_PHASES.has(o.phase)) warnings.push(`objective "${o.id}": unexpected phase "${o.phase}"`);
+    if (o.kind === 'secret' && o.points !== 1) warnings.push(`objective "${o.id}": secret worth ${o.points} VP`);
+  }
+
+  objectives.sort(
+    (a, b) =>
+      a.kind.localeCompare(b.kind) || (a.stage ?? 0) - (b.stage ?? 0) || a.name.localeCompare(b.name),
+  );
+  return objectives;
+}
+
 // --- TS emission ---
 function toLiteral(v) {
   if (Array.isArray(v)) return `[${v.map(toLiteral).join(', ')}]`;
@@ -250,9 +298,18 @@ for (const f of factions) {
   for (const id of f.homePlanetIds) if (!planetIds.has(id)) warnings.push(`${f.id}: bad home planet ${id}`);
 }
 
+const objectives = buildObjectives();
+
 emit('tech/tech.data.ts', 'Tech', 'TECHS', techs, ASYNC);
 emit('faction/faction.data.ts', 'Faction', 'FACTIONS', factions, ASYNC);
 emit('planet/planet.data.ts', 'Planet', 'PLANETS', planets, ULT);
+emit(
+  'objective/objective.data.ts',
+  'Objective',
+  'OBJECTIVES',
+  objectives,
+  'Source: AsyncTI4/TI4_map_generator_bot (objectives)',
+);
 
 const summary = (rows) =>
   Object.entries(rows.reduce((a, r) => ((a[r.source] = (a[r.source] ?? 0) + 1), a), {}))
@@ -262,6 +319,12 @@ const summary = (rows) =>
 console.log(`techs:    ${techs.length} (${summary(techs)})`);
 console.log(`factions: ${factions.length} (${summary(factions)})`);
 console.log(`planets:  ${planets.length} (${summary(planets)})`);
+console.log(
+  `objectives: ${objectives.length} (${summary(objectives)}; ` +
+    `I=${objectives.filter((o) => o.stage === 1).length} ` +
+    `II=${objectives.filter((o) => o.stage === 2).length} ` +
+    `secret=${objectives.filter((o) => o.kind === 'secret').length})`,
+);
 console.log(`Ω errata: ${techs.filter((t) => t.errata).length}`);
 console.log(`choose:   ${factions.filter((f) => f.startingTechChoice).map((f) => f.id).join(', ')}`);
 console.log(`no-start: ${factions.filter((f) => !f.startingTechIds.length && !f.startingTechChoice).map((f) => f.id).join(', ') || '(none)'}`);

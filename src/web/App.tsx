@@ -4,6 +4,7 @@ import { Toaster } from 'sonner';
 import { AppShell } from '@web/components/AppShell';
 import { ComingSoon } from '@web/components/ComingSoon';
 import { queryClient } from '@web/lib/queryClient';
+import { ObjectivesPage } from '@web/features/objectives/ObjectivesPage';
 import { TechTrackerPage } from '@web/features/tech-tracker/TechTrackerPage';
 import { ThemeProvider } from '@web/providers/ThemeProvider';
 
@@ -17,6 +18,7 @@ export function App() {
           <Route element={<AppShell />}>
             <Route index element={<Navigate to="/tech" replace />} />
             <Route path="/tech" element={<TechTrackerPage />} />
+            <Route path="/objectives" element={<ObjectivesPage />} />
             <Route path="/coming-soon" element={<ComingSoon />} />
             <Route path="*" element={<Navigate to="/tech" replace />} />
           </Route>

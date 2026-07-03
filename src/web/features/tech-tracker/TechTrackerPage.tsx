@@ -30,7 +30,7 @@ import {
   useUpdatePins,
   useUpdatePlanets,
   useUpdateTechs,
-} from './hooks/useGameState';
+} from '@web/hooks/useGameState';
 
 function toggleInSet(set: ReadonlySet<string>, id: string): string[] {
   const next = new Set(set);

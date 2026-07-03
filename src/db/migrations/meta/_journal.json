@@ -15,6 +15,13 @@
       "when": 1782841892034,
       "tag": "0001_chemical_quasar",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1783077811225,
+      "tag": "0002_pink_rick_jones",
+      "breakpoints": true
     }
   ]
 }

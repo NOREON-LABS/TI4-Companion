@@ -24,9 +24,29 @@ export { TECHS } from './tech/tech.data';
 export type { PrereqCounts, ResearchOptions } from './tech/tech.rules';
 export { availablePrerequisites, canResearch, researchableTechs } from './tech/tech.rules';
 
+// --- objective ---
+export type { Objective, ObjectiveKind, ObjectivePhase } from './objective/objective.types';
+export { OBJECTIVE_PHASES } from './objective/objective.types';
+export { OBJECTIVES } from './objective/objective.data';
+export type { ObjectiveScore, VpAdjustment, VictoryTarget } from './objective/objective.rules';
+export {
+  MAX_SCORED_SECRETS,
+  VICTORY_TARGETS,
+  hasReachedTarget,
+  objectivesById,
+  playerVp,
+  scoredSecretCount,
+  secretScoreBlocker,
+  secretTakenBy,
+} from './objective/objective.rules';
+
 // --- planet ---
 export type { Planet, PlanetTrait } from './planet/planet.types';
 export { PLANETS } from './planet/planet.data';
+
+// --- player ---
+export type { PlayerColor } from './player/player.types';
+export { PLAYER_COLORS } from './player/player.types';
 
 // --- faction ---
 export type { Faction, StartingTechChoice } from './faction/faction.types';
