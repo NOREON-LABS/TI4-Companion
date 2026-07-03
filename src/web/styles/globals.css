@@ -4,7 +4,8 @@
 
 @layer base {
   :root {
-    /* Deep-space dark theme with an amber/gold accent. */
+    /* Compile-time fallback values — ThemeProvider overrides these at runtime via a managed <style> tag.
+       To add a new theme, create src/web/lib/themes/<name>.ts and register it in src/web/lib/themes/index.ts. */
     --background: 226 42% 7%;
     --foreground: 210 40% 96%;
     --card: 224 38% 11%;
