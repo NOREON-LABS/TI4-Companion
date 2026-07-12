@@ -10,7 +10,7 @@ Short on table space? Run your full tech board from one screen.
 
 - **Faction picker** - choose your faction and starting techs autofill (with a "choose N" picker for factions like Winnu and Argent Flight).
 - **Planet search** - add the planets you control; their tech-skips count toward your prerequisites.
-- **Live status** - every tech is colour-coded by track and marked **Owned / Available / Locked**. "Available" = what you can research *right now* (prerequisites + planet skips + faction gating, with Codex Ω errata resolved).
+- **Live status** - every tech is colour-coded by track and marked **Owned / Available / Locked**. "Available" = what you can research *right now* (prerequisites + planet skips + faction gating + AI Development Algorithm's and Inheritance Systems' prerequisite skips, with Codex Ω errata resolved).
 - **Read the card** - tap any tech to see its full card text.
 - **Pin** techs to a reference tray, and **queue** a drag-to-reorder research plan.
 - **Filters** - by status, tech type, and a toggle to hide other factions' techs.
