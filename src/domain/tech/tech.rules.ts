@@ -32,6 +32,12 @@ export interface ResearchOptions {
   readonly factionId?: string;
 }
 
+/** AI Development Algorithm: exhaust to ignore any 1 prerequisite when researching a unit upgrade. */
+const AI_DEVELOPMENT_ALGORITHM_ID = 'aida';
+
+/** Inheritance Systems: exhaust + spend 2 resources to ignore all of a technology's prerequisites. */
+const INHERITANCE_SYSTEMS_ID = 'is';
+
 /** Whether a single tech can be researched right now given the available prerequisites. */
 export function canResearch(
   tech: Tech,
@@ -41,7 +47,15 @@ export function canResearch(
 ): boolean {
   if (ownedIds.has(tech.id)) return false;
   if (tech.factionId && tech.factionId !== options.factionId) return false;
-  return TECH_COLORS.every((color) => available[color] >= (tech.prerequisites[color] ?? 0));
+  const missing = TECH_COLORS.reduce(
+    (total, color) => total + Math.max(0, (tech.prerequisites[color] ?? 0) - available[color]),
+    0,
+  );
+  if (missing === 0) return true;
+  if (tech.category === 'unit' && missing === 1 && ownedIds.has(AI_DEVELOPMENT_ALGORITHM_ID)) {
+    return true;
+  }
+  return ownedIds.has(INHERITANCE_SYSTEMS_ID);
 }
 
 /** Every tech the player can research right now. */
