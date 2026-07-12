@@ -68,4 +68,51 @@ describe('canResearch / researchableTechs', () => {
     expect(canResearch(tech('ac2'), available, owned, { factionId: 'hacan' })).toBe(false);
     expect(canResearch(tech('ac2'), available, owned)).toBe(false);
   });
+
+  describe('AI Development Algorithm (aida)', () => {
+    // cr2 = Cruiser II (unit, needs green 1 + yellow 1 + red 1)
+    it('lets a unit upgrade ignore exactly 1 missing prerequisite', () => {
+      const oneShort = { blue: 0, green: 0, yellow: 1, red: 1 }; // missing 1 green
+      expect(canResearch(tech('cr2'), oneShort, new Set(['aida']))).toBe(true);
+      expect(canResearch(tech('cr2'), oneShort, new Set())).toBe(false);
+    });
+
+    it('does not let a unit upgrade skip 2 or more missing prerequisites', () => {
+      const twoShort = { blue: 0, green: 0, yellow: 0, red: 1 }; // missing green + yellow
+      expect(canResearch(tech('cr2'), twoShort, new Set(['aida']))).toBe(false);
+    });
+
+    it('does not apply to non-unit technologies', () => {
+      const oneShort = { blue: 0, green: 0, yellow: 0, red: 0 }; // gd needs 1 blue
+      expect(canResearch(tech('gd'), oneShort, new Set(['aida']))).toBe(false);
+    });
+
+    it('surfaces through researchableTechs when aida is owned', () => {
+      // cr2 (Cruiser II) needs green 1 + yellow 1 + red 1. Owning st (yellow, no
+      // prereq) and ps (red, no prereq) leaves green 1 short; aida should cover it.
+      const owned = [tech('st'), tech('ps')];
+      expect(ids(researchableTechs(TECHS, owned, []))).not.toContain('cr2');
+      expect(ids(researchableTechs(TECHS, [...owned, tech('aida')], []))).toContain('cr2');
+    });
+  });
+
+  describe('Inheritance Systems (is)', () => {
+    // lwd = Light/Wave Deflector (blue, needs blue 3) — any category, not just units.
+    it('ignores all of a technology\'s missing prerequisites once owned', () => {
+      const none = { blue: 0, green: 0, yellow: 0, red: 0 };
+      expect(canResearch(tech('lwd'), none, new Set())).toBe(false);
+      expect(canResearch(tech('lwd'), none, new Set(['is']))).toBe(true);
+    });
+
+    it('still respects faction gating on top of the prerequisite skip', () => {
+      const none = { blue: 0, green: 0, yellow: 0, red: 0 };
+      expect(canResearch(tech('ac2'), none, new Set(['is']), { factionId: 'sol' })).toBe(true);
+      expect(canResearch(tech('ac2'), none, new Set(['is']), { factionId: 'hacan' })).toBe(false);
+    });
+
+    it('surfaces through researchableTechs only once is is owned', () => {
+      expect(ids(researchableTechs(TECHS, [], []))).not.toContain('lwd');
+      expect(ids(researchableTechs(TECHS, [tech('is')], []))).toContain('lwd');
+    });
+  });
 });
