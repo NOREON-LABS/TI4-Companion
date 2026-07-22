@@ -48,13 +48,13 @@ export function AdjustmentsPopover({ player, adjustments, onAdd, onRemove }: Adj
           aria-label={`${player.name}: bonus victory points`}
           className="flex min-h-12 w-full items-center justify-center rounded-md text-sm font-semibold tabular-nums transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <span className={cn(total !== 0 ? color.text : 'text-muted-foreground')}>
+          <span className={cn(total !== 0 ? color.text : 'text-foreground/65')}>
             {total > 0 ? `+${total}` : total}
           </span>
         </button>
       </PopoverTrigger>
       <PopoverContent align="center" className="w-[300px] p-0">
-        <div className="flex items-center gap-2 border-b border-border/60 px-3 py-2.5 text-sm font-semibold">
+        <div className="flex items-center gap-2 border-b border-white/[0.14] px-3 py-2.5 text-sm font-semibold">
           <Medal className="h-4 w-4 text-primary" />
           {player.name} — bonus VP
         </div>

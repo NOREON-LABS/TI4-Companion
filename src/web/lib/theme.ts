@@ -1,8 +1,8 @@
 export interface Theme {
-  id: string
-  label: string
+  id: string;
+  label: string;
   /** HSL channel values — format Tailwind expects: "226 42% 7%" (no hsl() wrapper) */
-  cssVariables: Record<string, string>
+  cssVariables: Record<string, string>;
   /**
    * Raw CSS injected into a managed <style> tag at the top level (not nested).
    * Write full selectors, e.g. `[data-theme="myTheme"] body { font-family: ... }`.
@@ -14,9 +14,7 @@ export interface Theme {
    * without changing their markup. Component swapping (swapping the React component
    * itself) is not supported in v1 — add a `components` key when needed.
    */
-  scopedCSS?: string
+  scopedCSS?: string;
   /** External font stylesheet URL. ThemeProvider inserts/removes a <link> element. */
-  fontImportUrl?: string
+  fontImportUrl?: string;
 }
-
-export const DEFAULT_THEME_ID = 'default'

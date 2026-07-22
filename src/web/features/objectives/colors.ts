@@ -31,3 +31,10 @@ export const PLAYER_COLOR_HEX: Record<PlayerColor, string> = {
 export function playerColorOf(color: string): PlayerColor {
   return color in PLAYER_COLOR_CLASSES ? (color as PlayerColor) : 'red';
 }
+
+/** Stable compact identity used on both the score rail and standings. */
+export function playerMarkerCode(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length > 1) return words.slice(0, 3).map((word) => word[0]).join('').toUpperCase();
+  return (words[0] ?? '?').slice(0, 3).toUpperCase();
+}

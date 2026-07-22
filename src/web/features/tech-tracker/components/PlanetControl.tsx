@@ -75,11 +75,7 @@ export function PlanetControl({ enabledContent, controlledIds, onToggle }: Plane
         </PopoverContent>
       </Popover>
 
-      {controlled.length === 0 ? (
-        <p className="px-1 py-2 text-xs text-muted-foreground">
-          No planets yet — add the ones you control to gain their tech-skips.
-        </p>
-      ) : (
+      {controlled.length > 0 ? (
         <ul className="flex flex-col gap-1.5">
           {controlled.map((p) => (
             <li
@@ -103,7 +99,7 @@ export function PlanetControl({ enabledContent, controlledIds, onToggle }: Plane
             </li>
           ))}
         </ul>
-      )}
+      ) : null}
     </div>
   );
 }

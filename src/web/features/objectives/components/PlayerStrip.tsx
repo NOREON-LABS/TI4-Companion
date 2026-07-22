@@ -4,6 +4,7 @@ import type { GamePlayer, GameState } from '@web/lib/api';
 import { cn } from '@web/lib/utils';
 import { PLAYER_COLOR_CLASSES, playerColorOf } from '../colors';
 import { AdjustmentsPopover } from './AdjustmentsPopover';
+import { PlayerBadge } from './PlayerBadge';
 import { SecretsPopover } from './SecretsPopover';
 import { ENDGAME_ZONE } from './VpTrack';
 
@@ -22,10 +23,7 @@ interface PlayerStripProps {
   onRemoveAdjustment: (id: number) => void;
 }
 
-/**
- * Standings, best first: a big VP number per player plus their secrets (n/3) and bonus-VP
- * admin popovers. Players in the end-game zone glow; the winner gets the crown.
- */
+/** A compact standings instrument. One shared surface replaces the previous card mosaic. */
 export function PlayerStrip({
   players,
   vpByPlayer,
@@ -39,45 +37,89 @@ export function PlayerStrip({
   onRemoveAdjustment,
 }: PlayerStripProps) {
   const vpOf = (p: GamePlayer) => vpByPlayer.get(p.id) ?? 0;
-  const standings = [...players].sort((a, b) => vpOf(b) - vpOf(a));
+  const standings = [...players].sort((a, b) => vpOf(b) - vpOf(a) || a.name.localeCompare(b.name));
+  const scoreCounts = new Map<number, number>();
+  for (const player of standings) scoreCounts.set(vpOf(player), (scoreCounts.get(vpOf(player)) ?? 0) + 1);
+  let previousVp: number | null = null;
+  let previousRank = 0;
+  const rankedStandings = standings.map((player, index) => {
+    const vp = vpOf(player);
+    const rank = previousVp === vp ? previousRank : index + 1;
+    previousVp = vp;
+    previousRank = rank;
+    return { player, vp, rank, tied: (scoreCounts.get(vp) ?? 0) > 1 };
+  });
+  const columnCount = Math.max(
+    1,
+    Math.min(
+      5,
+      rankedStandings.length <= 5
+        ? rankedStandings.length
+        : Math.ceil(rankedStandings.length / 2),
+    ),
+  );
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {standings.map((player) => {
-        const color = PLAYER_COLOR_CLASSES[playerColorOf(player.color)];
-        const vp = vpOf(player);
-        const winner = vp >= victoryTarget;
-        const inZone = !winner && vp >= victoryTarget - ENDGAME_ZONE;
-        return (
-          <div
+    <section aria-labelledby="standings-title">
+      <div className="mb-3 flex items-center gap-3">
+        <h2
+          id="standings-title"
+          className="font-display text-sm font-semibold uppercase tracking-[0.16em] text-foreground"
+        >
+          Standings
+        </h2>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground/60">
+          VP order
+        </span>
+        <span className="h-px flex-1 bg-gradient-to-r from-white/25 to-transparent" />
+      </div>
+      <div
+        className="grid gap-px overflow-hidden rounded-xl border border-white/[0.14] bg-white/[0.12]"
+        style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}
+      >
+        {rankedStandings.map(({ player, vp, rank, tied }) => {
+          const color = PLAYER_COLOR_CLASSES[playerColorOf(player.color)];
+          const winner = vp >= victoryTarget;
+          const inZone = !winner && vp >= victoryTarget - ENDGAME_ZONE;
+          return (
+          <article
             key={player.id}
             className={cn(
-              'rounded-xl border border-border/60 bg-card/40 p-4',
-              winner &&
-                'border-amber-400/80 bg-amber-400/10 shadow-[0_0_28px_-8px] shadow-amber-400/50',
-              inZone && 'border-orange-400/50 shadow-[0_0_22px_-8px] shadow-orange-400/40',
+              'relative bg-[#070d18]/95 p-3.5',
+              winner && 'bg-amber-400/[0.09]',
+              inZone && 'bg-orange-400/[0.045]',
             )}
           >
-            <div className="mb-3 flex items-center gap-2.5">
-              {winner ? (
-                <Crown className="h-5 w-5 shrink-0 text-amber-400" />
-              ) : (
-                <span className={cn('h-4 w-4 shrink-0 rounded-full', color.dot)} />
-              )}
-              <span className="min-w-0 flex-1 truncate text-lg font-bold">{player.name}</span>
+            {winner || inZone ? (
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'absolute inset-x-0 top-0 h-0.5',
+                  winner ? 'bg-amber-300' : 'bg-orange-400/70',
+                )}
+              />
+            ) : null}
+            <div className="mb-3 flex items-center gap-2">
+              <span className="w-6 shrink-0 font-display text-[10px] font-bold tabular-nums text-foreground/55">
+                {tied ? `T${rank}` : `#${rank}`}
+              </span>
+              <PlayerBadge player={player} />
+              <span className="min-w-0 flex-1 truncate text-[17px] font-bold leading-tight">
+                {player.name}
+              </span>
+              {winner ? <Crown className="h-4 w-4 shrink-0 text-amber-300" /> : null}
               <span
                 className={cn(
                   'font-display text-4xl font-bold leading-none tabular-nums',
                   winner ? 'text-amber-300' : color.text,
-                  inZone && 'motion-safe:animate-pulse',
                 )}
               >
                 {vp}
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-md border border-border/50 bg-background/40">
-                <div className="px-2 pt-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+            <div className="grid grid-cols-2 divide-x divide-white/[0.12] border-t border-white/[0.12]">
+              <div>
+                <div className="px-2 pt-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/65">
                   Secrets
                 </div>
                 <SecretsPopover
@@ -88,8 +130,8 @@ export function PlayerStrip({
                   onToggle={(objectiveId) => onToggleScore(player.id, objectiveId)}
                 />
               </div>
-              <div className="rounded-md border border-border/50 bg-background/40">
-                <div className="px-2 pt-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+              <div>
+                <div className="px-2 pt-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/65">
                   Bonus VP
                 </div>
                 <AdjustmentsPopover
@@ -100,9 +142,10 @@ export function PlayerStrip({
                 />
               </div>
             </div>
-          </div>
+          </article>
         );
       })}
-    </div>
+      </div>
+    </section>
   );
 }

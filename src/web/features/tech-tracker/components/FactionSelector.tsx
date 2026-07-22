@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, ChevronsUpDown } from 'lucide-react';
+import { Check, ChevronsUpDown, RotateCcw } from 'lucide-react';
 import { activeEntities, FACTIONS, type EnabledContent } from '@domain';
 import { Button } from '@web/components/ui/button';
 import {
@@ -15,7 +15,7 @@ import { cn } from '@web/lib/utils';
 interface FactionSelectorProps {
   enabledContent: EnabledContent;
   currentFactionId: string | null;
-  onSelect: (factionId: string) => void;
+  onSelect: (factionId: string | null) => void;
 }
 
 export function FactionSelector({
@@ -30,7 +30,7 @@ export function FactionSelector({
   const current = factions.find((f) => f.id === currentFactionId);
 
   return (
-    <div className="w-full sm:w-[260px] lg:shrink-0">
+    <div className="w-full">
       <div className="mb-2 font-display text-xs font-semibold uppercase tracking-[0.16em] text-foreground">
         Faction
       </div>
@@ -49,11 +49,24 @@ export function FactionSelector({
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 text-muted-foreground" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="end" className="w-[260px] p-0">
+        <PopoverContent align="end" className="w-[260px] max-w-[calc(100vw-1.5rem)] p-0">
           <Command>
             <CommandInput placeholder="Search factions…" />
             <CommandList>
               <CommandEmpty>No faction found.</CommandEmpty>
+              {currentFactionId ? (
+                <CommandItem
+                  value="No faction"
+                  onSelect={() => {
+                    onSelect(null);
+                    setOpen(false);
+                  }}
+                  className="border-b border-border/60 text-muted-foreground"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Clear faction
+                </CommandItem>
+              ) : null}
               {factions.map((f) => (
                 <CommandItem
                   key={f.id}

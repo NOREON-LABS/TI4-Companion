@@ -1,4 +1,7 @@
+import { AnimatePresence } from 'motion/react';
+import * as m from 'motion/react-m';
 import { TECH_COLORS, type PrereqCounts } from '@domain';
+import { MOTION_TRANSITIONS } from '@web/lib/motion';
 import { cn } from '@web/lib/utils';
 import { COLOR_DOT, COLOR_LABEL } from '../colors';
 
@@ -24,12 +27,12 @@ const CHANNEL_ACCENT = {
 /** Shows how many prerequisites of each colour the player currently has available. */
 export function AvailabilityBar({ available }: { available: PrereqCounts }) {
   return (
-    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border/80 bg-border/80 shadow-[0_12px_35px_-24px_hsl(var(--primary)/0.45)] sm:grid-cols-4">
+    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border/75 bg-border/75 sm:grid-cols-4">
       {TECH_COLORS.map((color) => (
         <div
           key={color}
           className={cn(
-            'group relative flex min-w-0 items-center gap-2 bg-card/75 px-3 py-2.5 transition-colors hover:bg-card',
+            'group relative flex min-h-12 min-w-0 items-center gap-2.5 bg-[#070d18]/95 px-4 py-3 transition-colors hover:bg-card',
             available[color] === 0 && 'text-muted-foreground',
           )}
           title={`${COLOR_LABEL[color]} prerequisites available`}
@@ -43,11 +46,22 @@ export function AvailabilityBar({ available }: { available: PrereqCounts }) {
               available[color] === 0 && 'opacity-35 shadow-none',
             )}
           />
-          <span className="min-w-0 flex-1 truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <span className="min-w-0 flex-1 truncate text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             {COLOR_LABEL[color]}
           </span>
-          <span className="font-display text-lg font-bold leading-none tabular-nums text-foreground">
-            {available[color]}
+          <span className="grid min-w-[1ch] font-display text-lg font-bold leading-none tabular-nums text-foreground">
+            <AnimatePresence initial={false}>
+              <m.span
+                key={available[color]}
+                initial={{ opacity: 0, y: -5, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 5, scale: 0.9 }}
+                transition={MOTION_TRANSITIONS.state}
+                className="col-start-1 row-start-1"
+              >
+                {available[color]}
+              </m.span>
+            </AnimatePresence>
           </span>
         </div>
       ))}

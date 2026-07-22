@@ -87,8 +87,8 @@ export interface GameRepository {
   getOrCreateDefaultGame(): Promise<GameState>;
   setOwnedTechs(gameId: number, techIds: readonly string[]): Promise<GameState>;
   setControlledPlanets(gameId: number, planetIds: readonly string[]): Promise<GameState>;
-  /** Set the faction and autofill its fixed starting techs (replacing owned techs). */
-  setFaction(gameId: number, factionId: string): Promise<GameState>;
+  /** Set or clear the faction, replacing owned techs and controlled planets with its setup. */
+  setFaction(gameId: number, factionId: string | null): Promise<GameState>;
   setPins(gameId: number, techIds: readonly string[]): Promise<GameState>;
   /** Replace the research queue; the array order is the research order. */
   setQueue(gameId: number, techIds: readonly string[]): Promise<GameState>;
@@ -175,11 +175,11 @@ export class DrizzleGameRepository implements GameRepository {
     return this.requireGame(gameId);
   }
 
-  async setFaction(gameId: number, factionId: string): Promise<GameState> {
-    const faction = FACTIONS.find((f) => f.id === factionId);
-    if (!faction) throw new Error(`Unknown faction: ${factionId}`);
-    const starting = [...new Set(fixedStartingTechs(faction))];
-    const home = [...new Set(faction.homePlanetIds)];
+  async setFaction(gameId: number, factionId: string | null): Promise<GameState> {
+    const faction = factionId ? FACTIONS.find((f) => f.id === factionId) : null;
+    if (factionId && !faction) throw new Error(`Unknown faction: ${factionId}`);
+    const starting = faction ? [...new Set(fixedStartingTechs(faction))] : [];
+    const home = faction ? [...new Set(faction.homePlanetIds)] : [];
     await this.db.transaction(async (tx) => {
       await tx.update(games).set({ factionId }).where(eq(games.id, gameId));
       // Reset owned techs + controlled planets to the faction's starting setup.
@@ -249,9 +249,7 @@ export class DrizzleGameRepository implements GameRepository {
     }
     const revealed = new Set(unique);
     await this.db.transaction(async (tx) => {
-      await tx
-        .delete(gameRevealedObjectives)
-        .where(eq(gameRevealedObjectives.gameId, gameId));
+      await tx.delete(gameRevealedObjectives).where(eq(gameRevealedObjectives.gameId, gameId));
       if (unique.length > 0) {
         await tx
           .insert(gameRevealedObjectives)
@@ -407,10 +405,7 @@ export class DrizzleGameRepository implements GameRepository {
           .from(gameRevealedObjectives)
           .where(eq(gameRevealedObjectives.gameId, game.id))
           .orderBy(asc(gameRevealedObjectives.position)),
-        this.db
-          .select()
-          .from(gameObjectiveScores)
-          .where(eq(gameObjectiveScores.gameId, game.id)),
+        this.db.select().from(gameObjectiveScores).where(eq(gameObjectiveScores.gameId, game.id)),
         this.db
           .select()
           .from(gameVpAdjustments)

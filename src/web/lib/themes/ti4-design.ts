@@ -1,4 +1,4 @@
-import type { Theme } from '../theme'
+import type { Theme } from '../theme';
 
 export const ti4DesignTheme: Theme = {
   id: 'ti4-design',
@@ -18,13 +18,13 @@ export const ti4DesignTheme: Theme = {
     '--secondary': '219 36% 9%',
     '--secondary-foreground': '215 55% 96%',
     '--muted': '224 33% 7%',
-    '--muted-foreground': '220 12% 47%',
+    '--muted-foreground': '218 15% 62%',
     '--accent': '225 37% 13%',
     '--accent-foreground': '215 55% 96%',
     '--destructive': '355 100% 69%',
     '--destructive-foreground': '220 60% 4%',
-    '--border': '221 28% 14%',
-    '--input': '222 32% 16%',
+    '--border': '221 26% 20%',
+    '--input': '222 30% 22%',
     '--ring': '212 100% 68%',
     '--radius': '0.5rem',
     // Tech track colours — slightly more vivid than the default
@@ -50,4 +50,4 @@ export const ti4DesignTheme: Theme = {
   box-shadow: none;
 }
   `,
-}
+};

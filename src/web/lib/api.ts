@@ -30,7 +30,7 @@ export async function saveControlledPlanets(ids: string[]): Promise<GameState> {
   return res.json();
 }
 
-export async function saveFaction(factionId: string): Promise<GameState> {
+export async function saveFaction(factionId: string | null): Promise<GameState> {
   const res = await gameApi.faction.$put({ json: { factionId } });
   if (!res.ok) throw new Error('Failed to set faction');
   return res.json();

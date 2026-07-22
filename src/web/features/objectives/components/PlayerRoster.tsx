@@ -1,6 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import { Check, ChevronsUpDown, Plus, X } from 'lucide-react';
-import { activeEntities, FACTIONS, PLAYER_COLORS, type EnabledContent, type PlayerColor } from '@domain';
+import {
+  activeEntities,
+  FACTIONS,
+  PLAYER_COLORS,
+  type EnabledContent,
+  type PlayerColor,
+} from '@domain';
 import { Button } from '@web/components/ui/button';
 import {
   Command,
@@ -23,7 +29,13 @@ interface PlayerRosterProps {
 }
 
 /** Add / edit / remove the people at the table. Colours are unique per player. */
-export function PlayerRoster({ players, enabledContent, onAdd, onUpdate, onRemove }: PlayerRosterProps) {
+export function PlayerRoster({
+  players,
+  enabledContent,
+  onAdd,
+  onUpdate,
+  onRemove,
+}: PlayerRosterProps) {
   const [name, setName] = useState('');
   const takenColors = new Set(players.map((p) => p.color));
   const freeColors = PLAYER_COLORS.filter((c) => !takenColors.has(c));
@@ -53,14 +65,13 @@ export function PlayerRoster({ players, enabledContent, onAdd, onUpdate, onRemov
             />
           ))}
         </ul>
-      ) : (
-        <p className="px-1 text-xs text-muted-foreground">
-          Add the players at the table to start scoring.
-        </p>
-      )}
+      ) : null}
 
       {freeColors.length > 0 ? (
-        <form onSubmit={submit} className="flex flex-col gap-2.5 rounded-md border border-border/60 bg-card/40 p-3">
+        <form
+          onSubmit={submit}
+          className="flex flex-col gap-2.5 rounded-md border border-border/60 bg-card/40 p-3"
+        >
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -232,7 +243,9 @@ function FactionPicker({
                   setOpen(false);
                 }}
               >
-                <Check className={cn('h-4 w-4', f.id === factionId ? 'opacity-100' : 'opacity-0')} />
+                <Check
+                  className={cn('h-4 w-4', f.id === factionId ? 'opacity-100' : 'opacity-0')}
+                />
                 {f.name}
               </CommandItem>
             ))}

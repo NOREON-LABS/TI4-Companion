@@ -43,10 +43,10 @@ function SegmentButton({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        'inline-flex min-h-9 items-center justify-center gap-1.5 px-3 text-xs font-semibold transition-[background-color,color,opacity] focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+        'inline-flex min-h-11 items-center justify-center gap-2 px-3 text-sm font-semibold transition-[background-color,color,opacity,box-shadow] focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
         active
-          ? 'bg-secondary text-foreground shadow-sm'
-          : 'text-muted-foreground opacity-55 hover:bg-accent/60 hover:opacity-100',
+          ? 'bg-primary/[0.13] text-primary shadow-[inset_0_-2px_0_hsl(var(--primary)/0.75)]'
+          : 'text-muted-foreground/75 hover:bg-accent/60 hover:text-foreground',
       )}
     >
       {dot ? <span className={cn('h-2 w-2 rounded-full', dot, !active && 'opacity-50')} /> : null}
@@ -76,85 +76,85 @@ export function FilterBar({ filters, onChange }: FilterBarProps) {
   };
 
   return (
-    <div className="flex flex-col gap-3 border-y border-border/70 py-3">
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="font-display text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-            Status
-          </span>
-          <div
-            role="group"
-            aria-label="Tech status"
-            className="inline-flex divide-x divide-border/70 overflow-hidden rounded-md border border-border/80 bg-card/35"
-          >
-            {STATUS_ORDER.map((s) => (
-              <SegmentButton
-                key={s}
-                active={filters.statuses.has(s)}
-                dot={STATUS_DOT[s]}
-                onClick={() => toggleStatus(s)}
-              >
-                {STATUS_BADGE[s].label}
-              </SegmentButton>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 sm:ml-auto">
-          <span className="font-display text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-            Faction techs
-          </span>
-          <div
-            role="group"
-            aria-label="Faction technologies"
-            className="inline-flex divide-x divide-border/70 overflow-hidden rounded-md border border-border/80 bg-card/35"
-          >
+    <div className="flex flex-col gap-5">
+      <div>
+        <span className="mb-2 block font-display text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          Status
+        </span>
+        <div
+          role="group"
+          aria-label="Tech status"
+          className="grid grid-cols-3 divide-x divide-border/70 overflow-hidden rounded-md border border-border/80 bg-card/35"
+        >
+          {STATUS_ORDER.map((s) => (
             <SegmentButton
-              active={!filters.hideOtherFactionTechs}
-              onClick={() => onChange({ ...filters, hideOtherFactionTechs: false })}
+              key={s}
+              active={filters.statuses.has(s)}
+              dot={STATUS_DOT[s]}
+              onClick={() => toggleStatus(s)}
             >
-              All
+              {STATUS_BADGE[s].label}
             </SegmentButton>
-            <SegmentButton
-              active={filters.hideOtherFactionTechs}
-              onClick={() => onChange({ ...filters, hideOtherFactionTechs: true })}
-            >
-              Current
-            </SegmentButton>
-          </div>
+          ))}
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-1.5 border-t border-border/50 pt-3">
-        <span className="mr-1 font-display text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+      <div>
+        <span className="mb-2 block font-display text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          Faction techs
+        </span>
+        <div
+          role="group"
+          aria-label="Faction technologies"
+          className="grid grid-cols-2 divide-x divide-border/70 overflow-hidden rounded-md border border-border/80 bg-card/35"
+        >
+          <SegmentButton
+            active={!filters.hideOtherFactionTechs}
+            onClick={() => onChange({ ...filters, hideOtherFactionTechs: false })}
+          >
+            All
+          </SegmentButton>
+          <SegmentButton
+            active={filters.hideOtherFactionTechs}
+            onClick={() => onChange({ ...filters, hideOtherFactionTechs: true })}
+          >
+            Selected
+          </SegmentButton>
+        </div>
+      </div>
+
+      <div>
+        <span className="mb-2 block font-display text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
           Tracks
         </span>
-        {CATEGORY_ORDER.map((c) => {
-          const active = filters.categories.has(c);
-          return (
-            <button
-              type="button"
-              key={c}
-              aria-pressed={active}
-              onClick={() => toggleCategory(c)}
-              className={cn(
-                'inline-flex min-h-9 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-[background-color,border-color,color,opacity] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                active
-                  ? 'border-border/90 bg-card/80 text-foreground shadow-sm'
-                  : 'border-transparent text-muted-foreground opacity-45 hover:bg-accent/50 hover:opacity-100',
-              )}
-            >
-              <span
+        <div className="grid grid-cols-2 gap-2">
+          {CATEGORY_ORDER.map((c) => {
+            const active = filters.categories.has(c);
+            return (
+              <button
+                type="button"
+                key={c}
+                aria-pressed={active}
+                onClick={() => toggleCategory(c)}
                 className={cn(
-                  'h-2 w-2 rounded-full',
-                  CATEGORY_ACCENT[c].dot,
-                  !active && 'opacity-40',
+                  'inline-flex min-h-11 items-center gap-2 rounded-md border px-3 text-sm font-medium transition-[background-color,border-color,color,opacity] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  active
+                    ? 'border-border bg-card text-foreground shadow-sm'
+                    : 'border-border/25 bg-transparent text-muted-foreground/55 hover:border-border/60 hover:bg-accent/50 hover:text-foreground',
                 )}
-              />
-              {CATEGORY_SHORT[c]}
-            </button>
-          );
-        })}
+              >
+                <span
+                  className={cn(
+                    'h-2 w-2 rounded-full',
+                    CATEGORY_ACCENT[c].dot,
+                    !active && 'opacity-35',
+                  )}
+                />
+                {CATEGORY_SHORT[c]}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
