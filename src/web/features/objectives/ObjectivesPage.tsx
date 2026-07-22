@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Crown, Users } from 'lucide-react';
+import { AnimatePresence } from 'motion/react';
+import * as m from 'motion/react-m';
 import {
   activeEntities,
   hasReachedTarget,
@@ -11,6 +13,7 @@ import {
 import { Button } from '@web/components/ui/button';
 import { useGame } from '@web/hooks/useGameState';
 import type { GameState } from '@web/lib/api';
+import { MOTION_TRANSITIONS } from '@web/lib/motion';
 import { PLAYER_COLOR_HEX, playerColorOf } from './colors';
 import { ObjectiveCard } from './components/ObjectiveCard';
 import { PlayerStrip } from './components/PlayerStrip';
@@ -18,7 +21,6 @@ import { RevealObjectivePicker } from './components/RevealObjectivePicker';
 import { ScreenEffects } from './components/ScreenEffects';
 import { SettingsDrawer } from './components/SettingsDrawer';
 import { VictoryOverlay } from './components/VictoryOverlay';
-import { ENDGAME_ZONE, VpTrack } from './components/VpTrack';
 import {
   useAddAdjustment,
   useAddPlayer,
@@ -73,17 +75,38 @@ export function ObjectivesPage() {
   const onUnreveal = (id: string) =>
     revealObjectives.mutate(game.revealedObjectiveIds.filter((x) => x !== id));
 
+  const setupControl = () => (
+    <SettingsDrawer
+      open={setupOpen}
+      onOpenChange={setSetupOpen}
+      players={game.players}
+      enabledContent={game.enabledContent}
+      victoryTarget={game.victoryTarget}
+      onSetVictoryTarget={(target) => setVictoryTarget.mutate(target)}
+      onAddPlayer={(player) => addPlayer.mutate(player)}
+      onUpdatePlayer={(id, patch) => updatePlayer.mutate({ id, patch })}
+      onRemovePlayer={(id) => removePlayer.mutate(id)}
+    />
+  );
+
   const stageSection = (stage: 1 | 2, revealed: Objective[], candidates: Objective[]) => (
-    <section>
-      <div className="mb-3 flex items-center gap-3">
-        <h3 className="font-display text-sm font-semibold uppercase tracking-[0.16em] text-foreground">
+    <section aria-labelledby={`stage-${stage}-title`}>
+      <div className="mb-3 flex min-h-10 flex-wrap items-center gap-2.5">
+        <h3
+          id={`stage-${stage}-title`}
+          className="font-display text-sm font-semibold uppercase tracking-[0.16em] text-foreground"
+        >
           Stage {stage === 1 ? 'I' : 'II'}
         </h3>
-        <span className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
-        <RevealObjectivePicker stage={stage} candidates={candidates} onReveal={onReveal} />
+        <span className="h-px flex-1 bg-gradient-to-r from-white/25 to-transparent" />
+        <RevealObjectivePicker stage={stage} candidates={candidates} onReveal={onReveal} prominent />
+        {stage === 1 ? setupControl() : null}
       </div>
       {revealed.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        <div
+          className="grid gap-4"
+          style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(310px, 1fr))' }}
+        >
           {revealed.map((objective) => (
             <ObjectiveCard
               key={objective.id}
@@ -96,93 +119,88 @@ export function ObjectivesPage() {
           ))}
         </div>
       ) : (
-        <p className="rounded-xl border border-dashed border-border/60 bg-card/20 p-6 text-center text-sm text-muted-foreground">
-          No stage {stage === 1 ? 'I' : 'II'} objectives revealed yet.
-        </p>
+        <div className="flex min-h-20 items-center rounded-xl border border-white/[0.14] bg-[#070d18]/90 px-5 py-4">
+          <div>
+            <div className="text-base font-semibold">No public objective on the table</div>
+            <div className="mt-1 text-sm text-foreground/65">
+              Use Reveal objective above to put one into play.
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );
 
-  // Whole-screen ambience: embers once anyone enters the end-game zone, confetti for a win.
-  const endgame =
-    !leader &&
-    game.players.some(
-      (p) => (view.vpByPlayer.get(p.id) ?? 0) >= game.victoryTarget - ENDGAME_ZONE,
-    );
-
   return (
     <>
-      <ScreenEffects
-        mode={leader ? 'celebration' : endgame ? 'embers' : null}
-        accentHex={leader ? PLAYER_COLOR_HEX[playerColorOf(leader.color)] : undefined}
-      />
       {overlayWinner ? (
-        <VictoryOverlay
-          winner={overlayWinner}
-          victoryTarget={game.victoryTarget}
-          onDismiss={() => setOverlayWinner(null)}
+        <ScreenEffects
+          mode="celebration"
+          progress={1}
+          accentHex={PLAYER_COLOR_HEX[playerColorOf(overlayWinner.color)]}
         />
       ) : null}
+      <AnimatePresence>
+        {overlayWinner ? (
+          <VictoryOverlay
+            key={overlayWinner.id}
+            winner={overlayWinner}
+            victoryTarget={game.victoryTarget}
+            onDismiss={() => setOverlayWinner(null)}
+          />
+        ) : null}
+      </AnimatePresence>
 
-      {/* Command strip: winner callout + table setup. */}
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <h2 className="font-display text-xs font-semibold uppercase tracking-[0.16em] text-foreground">
-            First to {game.victoryTarget}
-          </h2>
-          {leader ? (
-            <div className="flex items-center gap-2 rounded-lg border border-amber-400/60 bg-amber-400/10 px-3 py-2 text-sm font-medium text-amber-300 motion-safe:animate-pulse">
-              <Crown className="h-4 w-4" />
-              {leader.name} has reached {game.victoryTarget} VP!
+      <div className="relative z-10">
+        {hasPlayers ? (
+          <div className="min-w-0">
+              <AnimatePresence initial={false}>
+                {leader ? (
+                  <m.div
+                    key={leader.id}
+                    initial={{ opacity: 0, scale: 0.96, y: 4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    transition={MOTION_TRANSITIONS.state}
+                    className="mb-3 flex w-fit items-center gap-2 rounded-lg border border-amber-400/60 bg-amber-400/10 px-3 py-2 text-sm font-medium text-amber-300"
+                  >
+                    <Crown className="h-4 w-4" />
+                    {leader.name} has reached {game.victoryTarget} VP!
+                  </m.div>
+                ) : null}
+              </AnimatePresence>
+
+              <div className="flex flex-col gap-6">
+                {stageSection(1, view.revealedStage1, view.candidatesStage1)}
+                {stageSection(2, view.revealedStage2, view.candidatesStage2)}
+                <PlayerStrip
+                  players={game.players}
+                  vpByPlayer={view.vpByPlayer}
+                  victoryTarget={game.victoryTarget}
+                  secretPool={view.secretPool}
+                  secretsByPlayer={view.secretsByPlayer}
+                  adjustmentsByPlayer={view.adjustmentsByPlayer}
+                  scores={game.scores}
+                  onToggleScore={onToggleScore}
+                  onAddAdjustment={(playerId, label, points) =>
+                    addAdjustment.mutate({ playerId, label, points })
+                  }
+                  onRemoveAdjustment={(id) => removeAdjustment.mutate(id)}
+                />
+              </div>
+          </div>
+        ) : (
+          <>
+            <div className="mb-4 flex justify-end">
+              {setupControl()}
             </div>
-          ) : null}
-        </div>
-        <SettingsDrawer
-          open={setupOpen}
-          onOpenChange={setSetupOpen}
-          players={game.players}
-          enabledContent={game.enabledContent}
-          victoryTarget={game.victoryTarget}
-          onSetVictoryTarget={(target) => setVictoryTarget.mutate(target)}
-          onAddPlayer={(player) => addPlayer.mutate(player)}
-          onUpdatePlayer={(id, patch) => updatePlayer.mutate({ id, patch })}
-          onRemovePlayer={(id) => removePlayer.mutate(id)}
-        />
+            <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border/60 bg-card/20 p-8 text-center">
+              <Users className="h-10 w-10 text-muted-foreground/40" />
+              <Button onClick={() => setSetupOpen(true)}>Open table setup</Button>
+            </div>
+          </>
+        )}
       </div>
-
-      {hasPlayers ? (
-        <div className="flex flex-col gap-7">
-          <VpTrack
-            players={game.players}
-            vpByPlayer={view.vpByPlayer}
-            victoryTarget={game.victoryTarget}
-          />
-          {stageSection(1, view.revealedStage1, view.candidatesStage1)}
-          {stageSection(2, view.revealedStage2, view.candidatesStage2)}
-          <PlayerStrip
-            players={game.players}
-            vpByPlayer={view.vpByPlayer}
-            victoryTarget={game.victoryTarget}
-            secretPool={view.secretPool}
-            secretsByPlayer={view.secretsByPlayer}
-            adjustmentsByPlayer={view.adjustmentsByPlayer}
-            scores={game.scores}
-            onToggleScore={onToggleScore}
-            onAddAdjustment={(playerId, label, points) =>
-              addAdjustment.mutate({ playerId, label, points })
-            }
-            onRemoveAdjustment={(id) => removeAdjustment.mutate(id)}
-          />
-        </div>
-      ) : (
-        <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border/60 bg-card/20 p-8 text-center">
-          <Users className="h-10 w-10 text-muted-foreground/40" />
-          <p className="max-w-sm text-sm text-muted-foreground">
-            Add the players at the table to light up the victory point track.
-          </p>
-          <Button onClick={() => setSetupOpen(true)}>Open table setup</Button>
-        </div>
-      )}
     </>
   );
 }

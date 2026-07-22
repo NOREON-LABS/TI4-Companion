@@ -1,9 +1,10 @@
-import { Hexagon, Sparkles, Trophy } from 'lucide-react';
+import { Crosshair, Hexagon, Trophy } from 'lucide-react';
 import type { ComponentType } from 'react';
 
 export interface TabDef {
   to: string;
   label: string;
+  shortLabel: string;
   icon: ComponentType<{ className?: string }>;
 }
 
@@ -12,7 +13,7 @@ export interface TabDef {
  * add an entry here. The order here is the order shown in the tab bar.
  */
 export const TABS: readonly TabDef[] = [
-  { to: '/tech', label: 'Tech Tracker', icon: Hexagon },
-  { to: '/objectives', label: 'Objectives', icon: Trophy },
-  { to: '/coming-soon', label: 'Coming soon', icon: Sparkles },
+  { to: '/tech', label: 'Tech Tracker', shortLabel: 'Tech', icon: Hexagon },
+  { to: '/objectives', label: 'Objectives', shortLabel: 'Objectives', icon: Trophy },
+  { to: '/combat', label: 'Combat Calculator', shortLabel: 'Combat', icon: Crosshair },
 ];

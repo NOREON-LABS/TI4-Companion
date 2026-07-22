@@ -25,11 +25,7 @@ export function PrereqPips({ prerequisites, available }: PrereqPipsProps) {
   );
 
   if (pips.length === 0) {
-    return (
-      <span className="text-[11px] uppercase tracking-wide text-muted-foreground/70">
-        no prerequisites
-      </span>
-    );
+    return null;
   }
 
   if (!available) {

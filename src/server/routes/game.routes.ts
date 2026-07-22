@@ -42,12 +42,16 @@ export const gameRoutes = new Hono()
     const updated = await gameRepository.setControlledPlanets(game.id, ids);
     return c.json(updated);
   })
-  .put('/faction', zValidator('json', z.object({ factionId: z.string() })), async (c) => {
-    const { factionId } = c.req.valid('json');
-    const game = await gameRepository.getOrCreateDefaultGame();
-    const updated = await gameRepository.setFaction(game.id, factionId);
-    return c.json(updated);
-  })
+  .put(
+    '/faction',
+    zValidator('json', z.object({ factionId: z.string().nullable() })),
+    async (c) => {
+      const { factionId } = c.req.valid('json');
+      const game = await gameRepository.getOrCreateDefaultGame();
+      const updated = await gameRepository.setFaction(game.id, factionId);
+      return c.json(updated);
+    },
+  )
   .put('/pins', zValidator('json', idsSchema), async (c) => {
     const { ids } = c.req.valid('json');
     const game = await gameRepository.getOrCreateDefaultGame();
@@ -127,7 +131,9 @@ export const gameRoutes = new Hono()
     '/victory-target',
     zValidator(
       'json',
-      z.object({ victoryTarget: z.union([z.literal(VICTORY_TARGETS[0]), z.literal(VICTORY_TARGETS[1])]) }),
+      z.object({
+        victoryTarget: z.union([z.literal(VICTORY_TARGETS[0]), z.literal(VICTORY_TARGETS[1])]),
+      }),
     ),
     async (c) => {
       const { victoryTarget } = c.req.valid('json');

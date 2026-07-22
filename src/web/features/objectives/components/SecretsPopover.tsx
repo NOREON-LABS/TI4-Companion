@@ -44,16 +44,16 @@ export function SecretsPopover({ player, secretPool, scored, scores, onToggle }:
           aria-label={`${player.name}: secret objectives`}
           className="flex min-h-12 w-full items-center justify-center rounded-md text-sm font-semibold tabular-nums transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <span className={cn(scored.length > 0 ? color.text : 'text-muted-foreground')}>
+          <span className={cn(scored.length > 0 ? color.text : 'text-foreground/65')}>
             {scored.length}/{MAX_SCORED_SECRETS}
           </span>
         </button>
       </PopoverTrigger>
       <PopoverContent align="center" className="w-[320px] p-0">
-        <div className="flex items-center gap-2 border-b border-border/60 px-3 py-2.5 text-sm font-semibold">
+        <div className="flex items-center gap-2 border-b border-white/[0.14] px-3 py-2.5 text-sm font-semibold">
           <EyeOff className="h-4 w-4 text-primary" />
           {player.name} — secrets
-          <span className="ml-auto text-xs font-normal tabular-nums text-muted-foreground">
+          <span className="ml-auto text-xs font-normal tabular-nums text-foreground/65">
             {scored.length}/{MAX_SCORED_SECRETS}
           </span>
         </div>
@@ -64,7 +64,7 @@ export function SecretsPopover({ player, secretPool, scored, scores, onToggle }:
               <li key={o.id} className="flex items-start gap-2 rounded-md bg-card/70 px-2.5 py-2">
                 <div className="min-w-0 flex-1">
                   <div className={cn('text-sm font-medium leading-tight', color.text)}>{o.name}</div>
-                  <div className="line-clamp-2 text-xs text-muted-foreground">{o.text}</div>
+                  <div className="line-clamp-2 text-xs text-foreground/65">{o.text}</div>
                 </div>
                 <button
                   type="button"
@@ -80,7 +80,7 @@ export function SecretsPopover({ player, secretPool, scored, scores, onToggle }:
         ) : null}
 
         {atCap ? (
-          <p className="px-3 pb-3 pt-1 text-xs text-muted-foreground">
+          <p className="px-3 pb-3 pt-1 text-xs text-foreground/65">
             Secret limit reached ({MAX_SCORED_SECRETS}).
           </p>
         ) : (
@@ -96,7 +96,7 @@ export function SecretsPopover({ player, secretPool, scored, scores, onToggle }:
                   className="flex flex-col items-start gap-0.5"
                 >
                   <span className="font-medium">{o.name}</span>
-                  <span className="line-clamp-2 text-xs text-muted-foreground">{o.text}</span>
+                  <span className="line-clamp-2 text-xs text-foreground/65">{o.text}</span>
                 </CommandItem>
               ))}
             </CommandList>

@@ -60,7 +60,7 @@ export function useUpdateQueue() {
 export function useSetFaction() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (factionId: string) => saveFaction(factionId),
+    mutationFn: (factionId: string | null) => saveFaction(factionId),
     onError: () => toast.error('Couldn’t set faction.'),
     onSuccess: (game: GameState) => qc.setQueryData(GAME_KEY, game),
   });

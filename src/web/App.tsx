@@ -6,26 +6,31 @@ import { ComingSoon } from '@web/components/ComingSoon';
 import { queryClient } from '@web/lib/queryClient';
 import { ObjectivesPage } from '@web/features/objectives/ObjectivesPage';
 import { TechTrackerPage } from '@web/features/tech-tracker/TechTrackerPage';
+import { CombatPage } from '@web/features/combat/CombatPage';
 import { ThemeProvider } from '@web/providers/ThemeProvider';
+import { AppMotionProvider } from '@web/providers/MotionProvider';
 
 export function App() {
   return (
     <ThemeProvider>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          {/* Tabbed shell: each tool is a tab/route rendered into the shell's outlet. */}
-          <Route element={<AppShell />}>
-            <Route index element={<Navigate to="/tech" replace />} />
-            <Route path="/tech" element={<TechTrackerPage />} />
-            <Route path="/objectives" element={<ObjectivesPage />} />
-            <Route path="/coming-soon" element={<ComingSoon />} />
-            <Route path="*" element={<Navigate to="/tech" replace />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-      <Toaster theme="dark" position="top-center" richColors closeButton />
-    </QueryClientProvider>
+      <AppMotionProvider>
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <Routes>
+              {/* Tabbed shell: each tool is a tab/route rendered into the shell's outlet. */}
+              <Route element={<AppShell />}>
+                <Route index element={<Navigate to="/tech" replace />} />
+                <Route path="/tech" element={<TechTrackerPage />} />
+                <Route path="/objectives" element={<ObjectivesPage />} />
+                <Route path="/combat" element={<CombatPage />} />
+                <Route path="/coming-soon" element={<ComingSoon />} />
+                <Route path="*" element={<Navigate to="/tech" replace />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+          <Toaster theme="dark" position="top-center" richColors closeButton />
+        </QueryClientProvider>
+      </AppMotionProvider>
     </ThemeProvider>
   );
 }

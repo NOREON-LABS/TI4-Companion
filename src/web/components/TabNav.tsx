@@ -1,44 +1,42 @@
 import { NavLink } from 'react-router-dom';
 import { TABS } from '@web/app/tabs';
 import { cn } from '@web/lib/utils';
-import { ThemeSwitcher } from '@web/components/ThemeSwitcher';
 
-/**
- * Browser-style tool tabs. A baseline runs under the strip; the active tab "punches through"
- * it — bordered on three sides with a transparent bottom (and -mb-px to overlap the baseline)
- * — so it connects to the content below with no line beneath it.
- */
+/** Quiet, transparent tool navigation that leaves the shared sky visible beneath it. */
 export function TabNav() {
   return (
-    <nav className="flex items-end gap-1 border-b border-border">
-      <div className="mr-2 flex h-11 shrink-0 items-center sm:mr-4">
+    <nav
+      aria-label="Companion tools"
+      className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-end gap-2 border-b border-border sm:gap-3"
+    >
+      <div className="flex h-11 shrink-0 items-center">
         <span className="font-display text-sm font-semibold uppercase tracking-[0.14em] text-foreground">
           TI4 <span className="hidden text-muted-foreground sm:inline">Companion</span>
         </span>
       </div>
-      {TABS.map(({ to, label, icon: Icon }) => (
-        <NavLink
-          key={to}
-          to={to}
-          className={({ isActive }) =>
-            cn(
-              '-mb-px flex min-h-11 items-center gap-2 rounded-t-lg border px-3 py-2.5 text-sm transition-colors sm:px-4',
-              isActive
-                ? 'border-border border-b-transparent bg-background font-semibold text-foreground'
-                : 'border-transparent font-medium text-muted-foreground hover:bg-card/40 hover:text-foreground',
-            )
-          }
-        >
-          {({ isActive }) => (
-            <>
-              <Icon className={cn('h-4 w-4', isActive && 'text-primary')} />
-              {label}
-            </>
-          )}
-        </NavLink>
-      ))}
-      <div className="ml-auto pb-1">
-        <ThemeSwitcher />
+      <div className="flex min-w-0 items-end overflow-x-auto overscroll-x-contain">
+        {TABS.map(({ to, label, shortLabel, icon: Icon }) => (
+          <NavLink
+            key={to}
+            to={to}
+            className={({ isActive }) =>
+              cn(
+                'flex min-h-11 shrink-0 items-center gap-2 bg-transparent px-2.5 py-2.5 text-sm transition-colors focus-visible:text-primary focus-visible:underline focus-visible:underline-offset-8 focus-visible:outline-none sm:px-4',
+                isActive
+                  ? 'font-semibold text-foreground'
+                  : 'font-medium text-muted-foreground hover:text-foreground',
+              )
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <Icon className={cn('h-4 w-4', isActive && 'text-primary')} />
+                <span className="sm:hidden">{shortLabel}</span>
+                <span className="hidden sm:inline">{label}</span>
+              </>
+            )}
+          </NavLink>
+        ))}
       </div>
     </nav>
   );

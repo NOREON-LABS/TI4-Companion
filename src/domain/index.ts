@@ -52,3 +52,30 @@ export { PLAYER_COLORS } from './player/player.types';
 export type { Faction, StartingTechChoice } from './faction/faction.types';
 export { FACTIONS } from './faction/faction.data';
 export { fixedStartingTechs, hasStartingChoice } from './faction/faction.rules';
+
+// --- combat forecast ---
+export type {
+  CombatForce,
+  CombatMode,
+  CombatModifiers,
+  CombatResult,
+  CombatScenario,
+  CombatUnitType,
+  UnitProfile,
+} from './combat/combat.types';
+export {
+  COMBAT_UNIT_TYPES,
+} from './combat/combat.types';
+export {
+  EMPTY_COMBAT_FORCE,
+  EMPTY_COMBAT_MODIFIERS,
+  GROUND_UNIT_ORDER,
+  SPACE_UNIT_ORDER,
+  UNIT_LABELS,
+  factionCombatOption,
+  profileFor,
+  unitOrderFor,
+  upgradeTechId,
+  upgradesFromTechs,
+} from './combat/combat.data';
+export { simulateCombat } from './combat/combat.rules';

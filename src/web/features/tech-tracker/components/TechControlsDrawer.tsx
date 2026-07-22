@@ -1,65 +1,60 @@
 import { useEffect, useRef } from 'react';
-import { ChevronLeft, Settings2, Users } from 'lucide-react';
+import { ChevronLeft, SlidersHorizontal } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import * as m from 'motion/react-m';
 import { createPortal } from 'react-dom';
-import { VICTORY_TARGETS, type EnabledContent } from '@domain';
-import type { GamePlayer, PlayerInput } from '@web/lib/api';
+import type { EnabledContent } from '@domain';
 import { MOTION_TRANSITIONS } from '@web/lib/motion';
-import { cn } from '@web/lib/utils';
-import { PlayerRoster } from './PlayerRoster';
+import { FactionSelector } from './FactionSelector';
+import { FilterBar, type TechFilters } from './FilterBar';
+import { PlanetControl } from './PlanetControl';
 
-interface SettingsDrawerProps {
+interface TechControlsDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  players: GamePlayer[];
   enabledContent: EnabledContent;
-  victoryTarget: number;
-  onSetVictoryTarget: (target: 10 | 14) => void;
-  onAddPlayer: (player: PlayerInput) => void;
-  onUpdatePlayer: (id: number, patch: Partial<PlayerInput>) => void;
-  onRemovePlayer: (id: number) => void;
+  currentFactionId: string | null;
+  onSelectFaction: (factionId: string | null) => void;
+  controlledIds: ReadonlySet<string>;
+  onTogglePlanet: (planetId: string) => void;
+  filters: TechFilters;
+  onFiltersChange: (filters: TechFilters) => void;
 }
 
-/**
- * Table config lives off-screen so the main page stays a pure display: a gear button
- * toggles a fixed drawer (same overlay pattern as the tech tracker's setup rail) with
- * the victory target and the player roster.
- */
-export function SettingsDrawer({
+export function TechControlsDrawer({
   open,
   onOpenChange,
-  players,
   enabledContent,
-  victoryTarget,
-  onSetVictoryTarget,
-  onAddPlayer,
-  onUpdatePlayer,
-  onRemovePlayer,
-}: SettingsDrawerProps) {
+  currentFactionId,
+  onSelectFaction,
+  controlledIds,
+  onTogglePlanet,
+  filters,
+  onFiltersChange,
+}: TechControlsDrawerProps) {
   const handleRef = useRef<HTMLButtonElement>(null);
-  const dialogRef = useRef<HTMLElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (!open) return;
     const handle = handleRef.current;
-    const focusFrame = requestAnimationFrame(() => dialogRef.current?.focus());
+    const focusFrame = requestAnimationFrame(() => drawerRef.current?.focus());
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
         onOpenChange(false);
         return;
       }
-      if (event.key !== 'Tab' || !dialogRef.current) return;
+      if (event.key !== 'Tab' || !drawerRef.current) return;
 
       const focusable = Array.from(
-        dialogRef.current.querySelectorAll<HTMLElement>(
+        drawerRef.current.querySelectorAll<HTMLElement>(
           'button:not([disabled]), input:not([disabled]), select:not([disabled]), [href], [tabindex]:not([tabindex="-1"])',
         ),
       );
       if (focusable.length === 0) {
         event.preventDefault();
-        dialogRef.current.focus();
+        drawerRef.current.focus();
         return;
       }
       const first = focusable[0]!;
@@ -88,9 +83,9 @@ export function SettingsDrawer({
       <AnimatePresence initial={false}>
         {open ? (
           <m.button
-            key="table-setup-backdrop"
+            key="tech-controls-backdrop"
             type="button"
-            aria-label="Close table setup"
+            aria-label="Close tech controls"
             onClick={() => onOpenChange(false)}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -112,8 +107,8 @@ export function SettingsDrawer({
           ref={handleRef}
           type="button"
           aria-expanded={open}
-          aria-controls="table-setup-drawer"
-          aria-label={open ? 'Close table setup' : 'Open table setup'}
+          aria-controls="tech-controls-drawer"
+          aria-label={open ? 'Close tech controls' : 'Open tech controls'}
           onClick={() => onOpenChange(!open)}
           className="pointer-events-auto absolute left-0 top-1/2 z-10 flex min-h-16 w-8 -translate-x-full -translate-y-1/2 items-center justify-center rounded-l-lg border border-r-0 border-primary/40 bg-background/90 text-primary shadow-[-8px_0_22px_-18px_hsl(var(--primary))] backdrop-blur transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
@@ -123,11 +118,11 @@ export function SettingsDrawer({
         </button>
 
         <aside
-          ref={dialogRef}
-          id="table-setup-drawer"
+          ref={drawerRef}
+          id="tech-controls-drawer"
           role={open ? 'dialog' : undefined}
           aria-modal={open ? 'true' : undefined}
-          aria-labelledby={open ? 'table-setup-title' : undefined}
+          aria-labelledby={open ? 'tech-controls-title' : undefined}
           aria-hidden={!open}
           tabIndex={-1}
           className="pointer-events-auto h-[100dvh] overflow-y-auto border-l border-border/80 bg-background/[0.98] shadow-[-28px_0_70px_-35px_black] outline-none"
@@ -135,63 +130,52 @@ export function SettingsDrawer({
           {open ? (
             <div className="flex min-h-full flex-col gap-6 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(1.25rem,env(safe-area-inset-top))]">
               <header className="flex items-center gap-2 border-b border-border/70 pb-4">
-                <Settings2 className="h-4 w-4 text-primary" />
+                <SlidersHorizontal className="h-4 w-4 text-primary" />
                 <h2
-                  id="table-setup-title"
+                  id="tech-controls-title"
                   className="font-display text-sm font-semibold uppercase tracking-[0.16em]"
                 >
-                  Table setup
+                  Tech controls
                 </h2>
               </header>
 
-              <section aria-labelledby="victory-target-title">
+              <FactionSelector
+                enabledContent={enabledContent}
+                currentFactionId={currentFactionId}
+                onSelect={onSelectFaction}
+              />
+
+              <section aria-labelledby="tech-filters-title">
                 <h3
-                  id="victory-target-title"
+                  id="tech-filters-title"
                   className="mb-3 font-display text-xs font-semibold uppercase tracking-[0.16em] text-foreground"
                 >
-                  Victory points to win
+                  Filters
                 </h3>
-                <div className="flex w-fit rounded-lg border border-border/80 bg-card/60 p-0.5">
-                  {VICTORY_TARGETS.map((target) => (
-                    <button
-                      key={target}
-                      type="button"
-                      aria-pressed={victoryTarget === target}
-                      onClick={() => onSetVictoryTarget(target)}
-                      className={cn(
-                        'h-11 rounded-md px-5 text-sm font-semibold tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                        victoryTarget === target
-                          ? 'bg-primary text-primary-foreground'
-                          : 'text-foreground/65 hover:text-foreground',
-                      )}
-                    >
-                      {target}
-                    </button>
-                  ))}
-                </div>
+                <FilterBar filters={filters} onChange={onFiltersChange} />
               </section>
 
-              <section aria-labelledby="table-players-title" className="border-t border-border/70 pt-5">
+              <section
+                aria-labelledby="controlled-planets-title"
+                className="border-t border-border/70 pt-5"
+              >
                 <div className="mb-3 flex items-center gap-2">
-                  <Users className="h-3.5 w-3.5 text-primary" />
                   <h3
-                    id="table-players-title"
+                    id="controlled-planets-title"
                     className="font-display text-xs font-semibold uppercase tracking-[0.16em] text-foreground"
                   >
-                    Players
+                    Planets controlled
                   </h3>
-                  {players.length > 0 ? (
-                    <span className="ml-auto text-xs tabular-nums text-foreground/65">
-                      {players.length}
+                  {controlledIds.size > 0 ? (
+                    <span className="ml-auto text-xs tabular-nums text-muted-foreground">
+                      {controlledIds.size}
                     </span>
                   ) : null}
                 </div>
-                <PlayerRoster
-                  players={players}
+                <PlanetControl
                   enabledContent={enabledContent}
-                  onAdd={onAddPlayer}
-                  onUpdate={onUpdatePlayer}
-                  onRemove={onRemovePlayer}
+                  controlledIds={controlledIds}
+                  onToggle={onTogglePlanet}
                 />
               </section>
             </div>
